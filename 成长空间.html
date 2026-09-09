@@ -1,0 +1,1853 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="description" content="成长空间：一个温和的个人成长小工具。自我观察、情绪、沟通与习惯，每天 10 分钟。">
+  <title>成长空间</title>
+  <style>
+/* =========================================================================
+   成长空间 · 样式
+   温和、简洁、有一点治愈感；成人向生活方式工具；移动端优先。
+   ========================================================================= */
+
+:root{
+  --bg:#f5f2ec;
+  --card:#ffffff;
+  --ink:#2b2925;
+  --ink-2:#4a463f;
+  --muted:#9b948a;
+  --line:#eae3d5;
+  --brand:#5f8b77;
+  --brand-ink:#3d6551;
+  --brand-soft:#e9f1ec;
+  --warm:#cf9b74;
+  --warm-soft:#f8ece1;
+  --radius:18px;
+  --shadow:0 10px 26px rgba(80,70,55,.06);
+  --maxw:560px;
+  --font:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans SC",sans-serif;
+}
+
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0;
+  font-family:var(--font);
+  background:var(--bg);
+  color:var(--ink);
+  line-height:1.7;
+  min-height:100vh;
+}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+input,textarea{font-family:inherit;color:var(--ink)}
+
+.hidden{display:none !important}
+
+/* 页面容器：窄列居中，桌面两侧留气氛 */
+main#view{
+  max-width:var(--maxw);
+  margin:0 auto;
+  padding:18px 20px 104px;
+}
+body.no-tab main#view{padding-bottom:36px}
+
+/* ---------- 顶栏 ---------- */
+#topbar{
+  position:sticky;top:0;z-index:30;
+  display:flex;align-items:center;justify-content:center;
+  height:52px;
+  background:color-mix(in srgb, var(--bg) 82%, transparent);
+  backdrop-filter:blur(8px);
+  -webkit-backdrop-filter:blur(8px);
+}
+#topbar.hidden{display:none}
+#pageTitle{font-size:15px;font-weight:600;letter-spacing:.04em}
+#btnBack{
+  position:absolute;left:10px;top:50%;transform:translateY(-50%);
+  width:40px;height:40px;font-size:26px;line-height:1;color:var(--ink-2);
+}
+body.no-bar #topbar{display:none}
+
+/* ---------- 底部导航 ---------- */
+#tabbar{
+  position:fixed;left:0;right:0;bottom:0;z-index:40;
+  max-width:var(--maxw);margin:0 auto;
+  display:flex;
+  background:color-mix(in srgb, var(--card) 92%, transparent);
+  backdrop-filter:blur(10px);
+  -webkit-backdrop-filter:blur(10px);
+  border-top:1px solid var(--line);
+  padding-bottom:env(safe-area-inset-bottom);
+}
+#tabbar.hidden{display:none}
+#tabbar .tab{
+  flex:1;height:60px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  font-size:12px;color:var(--muted);letter-spacing:.03em;
+  position:relative;
+}
+#tabbar .tab::before{
+  content:"";width:4px;height:4px;border-radius:50%;
+  background:transparent;margin-bottom:2px;
+}
+#tabbar .tab.on{color:var(--brand-ink);font-weight:600}
+#tabbar .tab.on::before{background:var(--brand)}
+
+/* ---------- 轻提示 ---------- */
+#toast{
+  position:fixed;left:50%;bottom:88px;transform:translateX(-50%) translateY(8px);
+  z-index:60;background:rgba(43,41,37,.88);color:#fff;
+  font-size:13px;padding:9px 16px;border-radius:999px;
+  opacity:0;pointer-events:none;transition:.22s ease;white-space:nowrap;
+}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+body.no-tab #toast{bottom:40px}
+
+/* ---------- 通用 ---------- */
+.muted{color:var(--muted)}
+.small{font-size:12px}
+.center{text-align:center}
+.label{
+  font-size:12px;letter-spacing:.14em;color:var(--muted);
+  text-transform:uppercase;
+}
+.card{
+  background:var(--card);border:1px solid var(--line);
+  border-radius:var(--radius);box-shadow:var(--shadow);
+  padding:18px 18px;
+  margin:0 0 14px;
+}
+.card-head{
+  display:flex;align-items:baseline;justify-content:space-between;
+  margin-bottom:6px;gap:10px;
+}
+.card h3{margin:2px 0 6px;font-size:18px;line-height:1.5}
+.card .sub,.card p{margin:4px 0}
+.meta{font-size:13px;margin:2px 0}
+.tag{
+  display:inline-block;font-size:11px;padding:2px 9px;border-radius:999px;
+  background:#f0ece4;color:#8a8376;white-space:nowrap;
+}
+.tag.live,.tag.ok{background:var(--brand-soft);color:var(--brand-ink)}
+.tag.soon{background:#f1eee7;color:#a49c8f}
+.page-intro{color:var(--ink-2);font-size:14px;margin:6px 2px 14px}
+
+/* 按钮 */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;
+  min-height:46px;padding:0 20px;border-radius:999px;
+  font-size:15px;font-weight:600;letter-spacing:.02em;
+  transition:transform .08s ease, opacity .15s;
+}
+.btn:active{transform:scale(.98)}
+.btn.primary{background:var(--brand);color:#fff}
+.btn.ghost{background:var(--card);color:var(--brand-ink);border:1px solid var(--line)}
+.btn.wide{width:100%}
+.btn[disabled]{opacity:.45;pointer-events:none}
+.btnrow{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+.btnrow .btn{flex:1;min-width:120px}
+.btnrow.center{justify-content:center}
+.bigpad{margin-top:6px}
+.link{
+  color:var(--brand-ink);font-size:14px;padding:6px 2px;font-weight:500;
+}
+.link.small{font-size:12px;color:var(--muted)}
+
+/* 进度条与统计 */
+.bar{height:8px;border-radius:999px;background:#eee7da;overflow:hidden;margin:8px 0 4px}
+.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--brand),#83a68f);border-radius:999px;transition:width .4s ease}
+.bar.mini{margin:10px 0 2px}
+.statrow{display:flex;gap:6px;margin-top:12px}
+.stat{flex:1;text-align:center}
+.stat b{display:block;font-size:20px;font-weight:700;letter-spacing:.01em}
+.stat span{font-size:11px;color:var(--muted)}
+
+/* ---------- 首页 ---------- */
+.hero{
+  background:linear-gradient(160deg,var(--brand-soft),#f3ead9);
+  border-radius:22px;padding:20px 20px 22px;margin-bottom:16px;
+}
+.hero-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.brand-mini{font-size:12px;letter-spacing:.28em;color:var(--brand-ink);font-weight:600}
+.streak-chip{
+  font-size:12px;color:var(--brand-ink);background:rgba(255,255,255,.65);
+  padding:4px 11px;border-radius:999px;
+}
+.greet{font-size:13px;color:var(--brand-ink);margin:0 0 2px}
+.hero-q{font-size:27px;line-height:1.35;margin:0;font-weight:700;letter-spacing:.01em}
+.today-card h3{font-size:19px}
+.today-card .btn{margin-top:14px}
+.today-note{font-size:13px;color:var(--muted);text-align:center;margin:4px 0 6px}
+.done-card .big{font-size:15px;color:var(--brand-ink);background:var(--brand-soft);display:inline-block;padding:8px 14px;border-radius:999px;margin-bottom:8px;font-weight:700;letter-spacing:.1em}
+.card .pt{font-weight:600;color:var(--ink-2)}
+
+/* ---------- 9 区地图 ---------- */
+.zonemap{
+  display:grid;grid-template-columns:repeat(3,1fr);grid-auto-rows:minmax(84px,auto);
+  gap:9px;
+}
+.zone-cell{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  background:var(--card);border:1px solid var(--line);border-radius:16px;
+  text-align:center;padding:8px 6px;color:var(--ink-2);
+  text-decoration:none;min-height:84px;
+}
+.zone-cell.live{
+  background:linear-gradient(160deg,#eef4ef,var(--card));
+  border-color:#c9dcd2;
+}
+.zc-name{font-size:13px;font-weight:600;line-height:1.35}
+.zc-count{font-size:11px;color:var(--brand-ink);margin-top:2px;font-weight:600}
+.zc-status{font-size:10px;color:#b3aca0;margin-top:2px;letter-spacing:.05em}
+.zc-status.ok{color:var(--brand)}
+
+/* 区域详情 */
+.zone-head{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+.zone-head h2{margin:0;font-size:22px}
+.mods{margin:0 0 14px}
+.mods .label,.lessons .label{margin:4px 2px 8px}
+.mod{
+  display:flex;align-items:center;gap:10px;
+  background:var(--card);border:1px solid var(--line);
+  padding:12px 14px;border-radius:14px;margin-bottom:8px;font-size:14px;
+}
+.mod .dot{width:8px;height:8px;border-radius:50%;background:var(--brand);flex:none}
+.mod.soon{color:var(--muted)}
+.mod.soon .dot{background:#d8d1c3}
+.soon-tag{margin-left:auto;font-size:11px;color:#b3aca0;white-space:nowrap}
+.lessons .label{margin-top:6px}
+.coming-card{background:var(--warm-soft);border-radius:var(--radius);padding:16px 18px;border:1px solid #f0ddc9}
+
+/* 课程行 */
+.lesson-row{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  background:var(--card);border:1px solid var(--line);
+  border-radius:15px;padding:13px 14px;margin-bottom:9px;
+}
+.lesson-row.done{background:#fafaf7;border-color:#e3dfd3}
+.lesson-row.done .lr-text b{color:var(--muted)}
+.lesson-row .lr-main{display:flex;align-items:center;gap:12px;min-width:0}
+.lr-no{
+  flex:none;width:34px;height:34px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:13px;font-weight:700;color:var(--brand-ink);background:var(--brand-soft);
+}
+.lesson-row.done .lr-no{background:#eef0e6;color:#a6a194}
+.lr-text{min-width:0}
+.lr-text b{display:block;font-size:15px;line-height:1.4}
+.lr-text .small{display:block;margin-top:2px}
+.lr-cta{flex:none;font-size:12px;color:var(--brand-ink);font-weight:600}
+
+/* ---------- 学习页 ---------- */
+.lesson-head{padding:6px 2px 8px}
+.lesson-head h2{font-size:21px;line-height:1.45;margin:8px 0 4px}
+.lh-meta{display:flex;align-items:center;gap:8px;font-size:12px}
+.ribbon{
+  margin:10px 0 4px;font-size:12px;color:var(--brand-ink);
+  background:var(--brand-soft);border-radius:999px;padding:6px 12px;display:inline-block;
+}
+.stepper{display:flex;gap:8px;margin:16px 0 6px}
+.stepper .step{display:flex;align-items:center;gap:6px;font-size:12px;color:#b3aca0}
+.stepper .step i{
+  width:20px;height:20px;border-radius:50%;background:#efe9dc;color:#9f988b;
+  font-style:normal;display:flex;align-items:center;justify-content:center;font-size:11px;
+}
+.stepper .step.on{color:var(--brand-ink)}
+.stepper .step.on i,.stepper .step.cur i{background:var(--brand);color:#fff}
+.stepper .step.cur{color:var(--brand-ink);font-weight:600}
+
+.reading{font-size:16px;line-height:1.9;color:#33312c}
+.body-h{margin:20px 0 4px;font-size:17px;color:var(--ink);letter-spacing:.01em}
+.body-p{margin:6px 0;color:#3b3832}
+.case{
+  background:var(--warm-soft);border:1px solid #f0ddc9;border-left:4px solid var(--warm);
+  border-radius:12px;padding:12px 15px;margin:16px 0;
+}
+.case-tag{display:block;font-size:11px;color:var(--warm);letter-spacing:.12em;margin-bottom:6px;font-weight:600}
+.action-bar{margin-top:22px}
+.card.finish .tip{margin-top:10px;background:var(--brand-soft);border-radius:12px;padding:11px 13px;font-size:13.5px;color:var(--ink-2)}
+
+/* ---------- 表单 ---------- */
+.steps{margin:8px 0 12px;padding-left:20px}
+.steps li{margin:5px 0;color:var(--ink-2)}
+.field{display:block;margin:14px 0}
+.field>span{font-size:13.5px;font-weight:600;color:var(--ink-2);display:block;margin-bottom:6px}
+.field .q{font-size:15px;font-weight:600;color:var(--ink)}
+.field .hint{display:block;font-size:12px;color:var(--muted);font-weight:400;margin-top:2px}
+textarea{
+  width:100%;border:1px solid var(--line);background:#fbfaf6;
+  border-radius:12px;padding:11px 12px;font-size:14.5px;line-height:1.7;
+  resize:vertical;min-height:56px;outline:none;
+}
+textarea:focus{border-color:#c4d6cb;background:#fff}
+
+/* ---------- 画像 / 状态 ---------- */
+.state-text{font-size:15px;line-height:1.85;color:var(--ink-2);margin-top:4px}
+.focus-label{margin:10px 0 2px;font-size:12px;letter-spacing:.12em;color:var(--muted)}
+.focus-item{margin:3px 0;color:var(--ink-2);font-size:14px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.chip{
+  font-size:12.5px;color:var(--brand-ink);background:var(--brand-soft);
+  border:1px solid #d6e3da;padding:7px 12px;border-radius:999px;line-height:1.3;
+  text-align:left;max-width:100%;
+}
+.chip.ok{background:var(--brand-soft)}
+.smallmt{margin-top:14px}
+.statgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-bottom:14px}
+.statgrid .stat{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:12px 4px}
+.statgrid .stat b{font-size:19px}
+
+/* 时间线 */
+.timeline{list-style:none;margin:6px 0 0;padding:0}
+.timeline li{
+  display:flex;gap:12px;padding:10px 0;border-bottom:1px dashed var(--line);
+}
+.timeline li:last-child{border-bottom:none}
+.tl-date{flex:none;width:52px;font-size:11px;color:var(--muted);line-height:1.4;text-align:right}
+.tl-date em{display:block;font-style:normal;color:#c6bfb2}
+.tl-main{min-width:0;font-size:13.5px}
+.tl-main b{font-weight:600;font-size:13.5px;color:var(--ink-2)}
+.tl-main .note{margin:2px 0 0;font-size:13px;color:var(--ink-2);white-space:pre-wrap}
+.review p{color:var(--ink-2)}
+
+/* ---------- 成长评估 ---------- */
+.assess .page-intro{font-size:15px;line-height:1.8}
+.assess-top{text-align:center;margin:6px 0 4px}
+.assess-top h2{font-size:22px;margin:8px 0 2px}
+.scale-legend{
+  display:flex;justify-content:space-between;font-size:12px;color:var(--muted);
+  margin:6px 2px 14px;
+}
+.aq{padding-top:16px}
+.aq-no{font-size:11px;color:var(--warm);letter-spacing:.2em;margin:0}
+.aq-text{font-size:15.5px;font-weight:600;margin:4px 0 12px;line-height:1.6}
+.scale{display:flex;gap:6px}
+.sc{
+  flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;
+  padding:8px 0 6px;border:1px solid var(--line);border-radius:12px;
+  background:#fbfaf6;font-size:10px;color:var(--muted);
+}
+.sc b{font-size:15px;color:var(--ink-2)}
+.sc.on{background:var(--brand);border-color:var(--brand)}
+.sc.on b,.sc.on span{color:#fff}
+
+@media (min-width:600px){
+  body{background:
+    radial-gradient(1200px 600px at 15% -10%, #ece8dd 0, transparent 60%),
+    var(--bg);}
+}
+@media (max-width:360px){
+  .hero-q{font-size:24px}
+  .statgrid{grid-template-columns:repeat(2,1fr)}
+}
+</style>
+</head>
+<body>
+
+  <!-- 顶栏 -->
+  <header id="topbar">
+    <button id="btnBack" class="iconbtn back" aria-label="返回" hidden>‹</button>
+    <div id="pageTitle">成长空间</div>
+  </header>
+
+  <!-- 页面内容 -->
+  <main id="view"></main>
+
+  <!-- 底部导航 -->
+  <nav id="tabbar">
+    <button class="tab" data-nav="home">首页</button>
+    <button class="tab" data-nav="route">路线</button>
+    <button class="tab" data-nav="course">课程</button>
+    <button class="tab" data-nav="practice">练习</button>
+    <button class="tab" data-nav="archive">我的</button>
+  </nav>
+
+  <!-- 轻提示 -->
+  <div id="toast" role="status"></div>
+
+  <!-- 核心层 -->
+  <script>
+/* =========================================================================
+ * 成长空间 · 通用 UI 小工具（无依赖）
+ * ========================================================================= */
+(function () {
+  "use strict";
+
+  function $(s, root) { return (root || document).querySelector(s); }
+  function $all(s, root) { return Array.prototype.slice.call((root || document).querySelectorAll(s)); }
+
+  /* 转义，防止用户输入内容被当作 HTML 渲染 */
+  function esc(s) {
+    return String(s == null ? "" : s)
+      .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+  }
+
+  function el(tag, cls, text) {
+    var n = document.createElement(tag);
+    if (cls) n.className = cls;
+    if (text !== undefined && text !== null) n.textContent = text;
+    return n;
+  }
+
+  /* 本地日期 YYYY-MM-DD */
+  function today() {
+    var d = new Date();
+    return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate());
+  }
+  function pad(n) { return (n < 10 ? "0" : "") + n; }
+  function dateToStr(d) {
+    return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate());
+  }
+  function dayBefore(str) {
+    var d = new Date(str + "T00:00:00");
+    d.setDate(d.getDate() - 1);
+    return dateToStr(d);
+  }
+  /* 显示友好日期：今天/昨天/M月d日 */
+  function friendlyDate(str) {
+    var t = today();
+    if (str === t) return "今天";
+    if (str === dayBefore(t)) return "昨天";
+    var p = str.split("-");
+    return parseInt(p[1], 10) + "月" + parseInt(p[2], 10) + "日";
+  }
+  function friendlyTime(ts) {
+    var d = new Date(ts);
+    return pad(d.getHours()) + ":" + pad(d.getMinutes());
+  }
+
+  /* 轻提示 */
+  var toastTimer = null;
+  function toast(msg) {
+    var t = $("#toast");
+    if (!t) return;
+    t.textContent = msg;
+    t.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { t.classList.remove("show"); }, 1800);
+  }
+
+  window.UI = {
+    $: $, $all: $all, el: el, esc: esc,
+    today: today, pad: pad, dateToStr: dateToStr, dayBefore: dayBefore,
+    friendlyDate: friendlyDate, friendlyTime: friendlyTime, toast: toast
+  };
+})();
+</script>
+  <script>
+/* =========================================================================
+ * 成长空间 · 本地数据层（LocalStorage，key 前缀 gs.）
+ * 所有用户数据只保存在当前浏览器里，不联网、不上传。
+ * ========================================================================= */
+(function () {
+  "use strict";
+
+  var PREFIX = "gs.";
+  var KEYS = { profile: "profile", progress: "progress", journal: "journal", practices: "practices" };
+
+  function raw(k) { return PREFIX + k; }
+  function loadJson(k, def) {
+    try {
+      var v = JSON.parse(localStorage.getItem(raw(k)));
+      return v == null ? def : v;
+    } catch (e) { return def; }
+  }
+  function saveJson(k, v) {
+    try { localStorage.setItem(raw(k), JSON.stringify(v)); } catch (e) { /* 隐私/容量异常时静默 */ }
+  }
+
+  function getProfile() { return loadJson(KEYS.profile, null); }
+  function saveProfile(p) { saveJson(KEYS.profile, p); }
+
+  function progress() { return loadJson(KEYS.progress, {}); }
+  function saveProgress(o) { saveJson(KEYS.progress, o); }
+  function journal() { return loadJson(KEYS.journal, []); }
+  function practices() { return loadJson(KEYS.practices, []); }
+
+  function courseState(id) {
+    var p = progress()[id];
+    return p ? p.status : "none";
+  }
+  function isDone(id) { return courseState(id) === "done"; }
+  function markStarted(id) {
+    var p = progress();
+    if (!p[id] || p[id].status !== "done") {
+      if (!p[id]) p[id] = { status: "started", startedAt: Date.now() };
+    }
+    saveProgress(p);
+  }
+
+  /* 新增一条成长记录（时间线用）。type: assessment / course / practice */
+  function addJournal(type, note, meta) {
+    var j = journal();
+    var d = new Date();
+    j.push({
+      id: "j" + d.getTime() + Math.floor(Math.random() * 1000),
+      date: UI.today(), ts: d.getTime(), type: type, note: note || "", meta: meta || {}
+    });
+    j.sort(function (a, b) { return a.ts - b.ts; });
+    saveJson(KEYS.journal, j);
+  }
+
+  /* 记录一次“今日练习” */
+  function addPractice(courseId, note) {
+    var arr = practices();
+    var d = new Date();
+    arr.push({ id: courseId + "-" + d.getTime(), courseId: courseId, note: note || "", date: UI.today(), ts: d.getTime() });
+    arr.sort(function (a, b) { return b.ts - a.ts; });
+    saveJson(KEYS.practices, arr);
+  }
+
+  /* 完成一节课程：写进度 + 练习 + 成长记录 */
+  function completeCourse(courseId, payload) {
+    payload = payload || {};
+    var p = progress();
+    p[courseId] = { status: "done", finishedAt: Date.now() };
+    saveProgress(p);
+    if (!payload.noPractice) addPractice(courseId, payload.practiceNote);
+    addJournal("course", "完成课程《" + courseTitle(courseId) + "》", {
+      courseId: courseId,
+      reflections: payload.reflections || []
+    });
+  }
+
+  /* 已完成后，再次做练习/反思：只追加记录，不改完成状态 */
+  function logSession(courseId, payload) {
+    payload = payload || {};
+    addPractice(courseId, payload.practiceNote);
+    addJournal("practice", "重做练习《" + courseTitle(courseId) + "》", { courseId: courseId });
+  }
+
+  function courseTitle(id) {
+    var c = window.COURSES && COURSES.filter(function (x) { return x.id === id; })[0];
+    return c ? c.title : "";
+  }
+
+  /* ---- 统计 ---- */
+  function doneIds() {
+    var p = progress(), out = [];
+    for (var k in p) if (p.hasOwnProperty(k) && p[k].status === "done") out.push(k);
+    return out;
+  }
+  function nextCourseId() {
+    var cs = window.COURSES || [];
+    for (var i = 0; i < cs.length; i++) if (!isDone(cs[i].id)) return cs[i].id;
+    return null;
+  }
+  function practiceDistinct() {
+    var arr = practices(), set = {};
+    for (var i = 0; i < arr.length; i++) set[arr[i].courseId] = true;
+    return Object.keys(set).length;
+  }
+  /* 连续学习天数：从今天(或昨天)往前数连续有记录的天数 */
+  function streak() {
+    var j = journal(), set = {}, has = function (s) { return !!set[s]; };
+    for (var i = 0; i < j.length; i++) set[j[i].date] = true;
+    if (!j.length) return 0;
+    var cur = UI.today(), count = 0;
+    if (!has(cur)) cur = UI.dayBefore(cur);   // 今天还没记录时，从昨天算起，不断签
+    while (has(cur)) { count++; cur = UI.dayBefore(cur); }
+    return count;
+  }
+  function stats() {
+    var ids = doneIds();
+    var total = (window.COURSES || []).length;
+    var thisWeek = 0, td = UI.today(), j = journal();
+    var weekAgo = new Date();
+    weekAgo.setDate(weekAgo.getDate() - 7);
+    for (var i = 0; i < j.length; i++) if (j[i].ts >= weekAgo.getTime()) thisWeek++;
+    var todayActive = j.some(function (e) { return e.date === td; });
+    return {
+      coursesTotal: total,
+      coursesDone: ids.length,
+      practiceDone: practiceDistinct(),
+      streak: streak(),
+      thisWeek: thisWeek,
+      todayActive: todayActive
+    };
+  }
+
+  function resetAll() {
+    try {
+      localStorage.removeItem(raw(KEYS.profile));
+      localStorage.removeItem(raw(KEYS.progress));
+      localStorage.removeItem(raw(KEYS.journal));
+      localStorage.removeItem(raw(KEYS.practices));
+    } catch (e) {}
+  }
+
+  window.Store = {
+    getProfile: getProfile, saveProfile: saveProfile,
+    journal: journal, practices: practices,
+    progress: progress,
+    courseState: courseState, isDone: isDone, markStarted: markStarted,
+    addJournal: addJournal, addPractice: addPractice,
+    completeCourse: completeCourse, logSession: logSession,
+    doneIds: doneIds, nextCourseId: nextCourseId,
+    practiceDistinct: practiceDistinct, streak: streak, stats: stats,
+    resetAll: resetAll
+  };
+})();
+</script>
+  <script>
+/* =========================================================================
+ * 成长空间 · 路由与页面切换
+ * 页面由 window.Pages[name] 提供：
+ *   { title?, render(params)->html, bind(viewEl, params), hideTab?, hideBar? }
+ * 底部 5 个根页面(tab) + 下钻页面(zone/lesson/assess)。
+ * ========================================================================= */
+(function () {
+  "use strict";
+
+  var TABS = ["home", "route", "course", "practice", "archive"];
+  var TAB_NAMES = { home: "首页", route: "成长路线", course: "课程", practice: "练习", archive: "我的档案" };
+
+  var state = { tab: "home", stack: [] };
+
+  function isTab(name) { return TAB_NAMES.hasOwnProperty(name); }
+
+  function render(name, params) {
+    var page = window.Pages[name];
+    if (!page) { name = "home"; page = window.Pages.home; }
+    var v = UI.$("#view");
+    v.innerHTML = page.render(params || {});
+    if (page.bind) page.bind(v, params || {});
+
+    /* 顶栏 */
+    var hideBar = !!(page.hideBar || name === "assess");
+    var topbar = UI.$("#topbar");
+    if (topbar) topbar.classList.toggle("hidden", hideBar);
+    UI.$("#btnBack") && UI.$("#btnBack").classList.toggle("hidden", isTab(name));
+
+    var titleEl = UI.$("#pageTitle");
+    if (titleEl) {
+      var t = (typeof page.title === "function" ? page.title(params) : page.title) || TAB_NAMES[name] || "成长空间";
+      titleEl.textContent = t;
+    }
+    document.body.classList.toggle("no-bar", hideBar);
+    document.body.classList.toggle("no-tab", !!(page.hideTab || name === "assess"));
+
+    /* 底部导航 */
+    var tabbar = UI.$("#tabbar");
+    if (tabbar) {
+      var hideTab = !!(page.hideTab || name === "assess");
+      tabbar.classList.toggle("hidden", hideTab);
+      var btns = UI.$all("#tabbar .tab");
+      for (var i = 0; i < btns.length; i++) {
+        var active = btns[i].getAttribute("data-nav") === name;
+        btns[i].classList.toggle("on", active);
+      }
+    }
+    window.scrollTo(0, 0);
+    if (window.afterNav) window.afterNav(name, params);
+    state.current = { name: name, params: params || {} };
+    return state.current;
+  }
+
+  function navigate(name, params) {
+    if (isTab(name)) { state.tab = name; state.stack = []; }
+    else { state.stack.push({ name: name, params: params || {} }); }
+    return render(name, params);
+  }
+
+  function back() {
+    var target;
+    if (state.stack.length) { state.stack.pop(); }
+    if (state.stack.length) { var top = state.stack[state.stack.length - 1]; target = top; }
+    else { target = { name: state.tab, params: {} }; }
+    return render(target.name, target.params);
+  }
+
+  function current() { return state.current || { name: state.tab }; }
+
+  function init() {
+    UI.$("#btnBack").addEventListener("click", function () { back(); });
+    var btns = UI.$all("#tabbar .tab");
+    for (var i = 0; i < btns.length; i++) {
+      (function (b) {
+        b.addEventListener("click", function () { navigate(b.getAttribute("data-nav")); });
+      })(btns[i]);
+    }
+  }
+
+  window.Router = {
+    TABS: TABS, TAB_NAMES: TAB_NAMES,
+    navigate: navigate, back: back, render: render, init: init, current: current
+  };
+})();
+</script>
+  <!-- 数据层 -->
+  <script>
+/* =========================================================================
+ * 成长空间 · 9 大成长区域框架
+ * -------------------------------------------------------------------------
+ * 双层结构：
+ *  - core：原始结构名（心智控制 / 自主意识 / …）——仅内部保留，永不渲染。
+ *  - name / intro / subTopics：界面使用的安全化、日常化表达。
+ * 第一阶段只有中央区(center)为 live，其余 8 区整区“即将开放”。
+ * 注意：不删除、不合并、不重排 9 区；本文件为唯一 9 区来源。
+ * ========================================================================= */
+(function () {
+  "use strict";
+
+  var regions = [
+    {
+      id: "lefttop", core: "左上区 · 神经联络",
+      name: "身心感知",
+      intro: "练习聆听身体发出的信号：呼吸、紧绷、放松。很多时候身体比语言更早知道答案。",
+      subTopics: ["身体会先说话", "呼吸与放松", "照顾身体的信号"],
+      status: "soon", pos: { r: 1, c: 1 }
+    },
+    {
+      id: "upper", core: "上方区 · 自主意识",
+      name: "自主意识与信息选择",
+      intro: "留意自己正在注意什么、相信什么，慢慢把选择注意力与信息的主动权拿回自己手里。",
+      subTopics: ["留意注意力放在哪里", "把事实和观点分开", "不被别人的评价带着走"],
+      status: "soon", pos: { r: 1, c: 2 }
+    },
+    {
+      id: "righttop", core: "右上区 · 灵性结构",
+      name: "内在认知结构",
+      intro: "看看心里那些关于“我该是怎样的人、世界该怎样运转”的默认设定，试着给它们松一松。",
+      subTopics: ["我怎样看待自己", "心里常说的那句话", "松动旧的看待方式"],
+      status: "soon", pos: { r: 1, c: 3 }
+    },
+    {
+      id: "left", core: "左方区 · 旧有惯性",
+      name: "习惯与惯性模式",
+      intro: "看见那些不知不觉重复了很久的习惯动作，用一个微小、新的动作，轻轻打断自动循环。",
+      subTopics: ["认识你的老习惯", "一次微小的新动作", "打断自动循环"],
+      status: "soon", pos: { r: 2, c: 1 }
+    },
+    {
+      id: "center", core: "中央区 · 心智控制",
+      name: "自我认知与反应",
+      intro: "观察自己在情绪和事情来临时如何自动反应，练习在“发生”与“回应”之间，先停一停。",
+      subTopics: ["看见自动化反应", "识别情绪", "反应与暂停", "模式复盘"],
+      status: "live", pos: { r: 2, c: 2 }
+    },
+    {
+      id: "right", core: "右方区 · 思维扩展",
+      name: "思维拓展",
+      intro: "把“只能这样想”松一松，练习从别人的角度、从更大的视角，看同一件事情。",
+      subTopics: ["换个角度看问题", "想法不等于事实", "打开新的可能"],
+      status: "soon", pos: { r: 2, c: 3 }
+    },
+    {
+      id: "leftbottom", core: "左下区 · 神性交换",
+      name: "能量与状态管理",
+      intro: "了解自己的精力节律：状态低的时候不硬撑，也知道怎么把自己一点一点养回来。",
+      subTopics: ["我的精力节律", "状态自查", "学会恢复"],
+      status: "soon", pos: { r: 3, c: 1 }
+    },
+    {
+      id: "lower", core: "下方区 · 神性连接",
+      name: "安全感与生命体验",
+      intro: "在日常生活里建立稳定感：好好吃饭、睡觉、休息，和自己、和生活重新连接。",
+      subTopics: ["日常的稳定感", "与生活的连接", "找回自己的节奏"],
+      status: "soon", pos: { r: 3, c: 2 }
+    },
+    {
+      id: "rightbottom", core: "右下区 · 模块交换",
+      name: "信息与认知模块",
+      intro: "留意每天进来的信息怎样影响你，练习先筛选、暂停、验证，而不是照单全收。",
+      subTopics: ["我的信息摄入", "判断与验证", "选择相信什么"],
+      status: "soon", pos: { r: 3, c: 3 }
+    }
+  ];
+
+  function byId(id) {
+    for (var i = 0; i < regions.length; i++) if (regions[i].id === id) return regions[i];
+    return null;
+  }
+
+  window.GData = {
+    regions: regions,
+    regionById: byId,
+    liveRegionId: "center",          // 第一阶段有真实课程的区
+    gridSize: 3                      // 3×3 空间地图
+  };
+})();
+</script>
+  <script>
+/* =========================================================================
+ * 成长空间 · 成长状态自评（数据 + 画像规则）
+ * 只输出「当前状态 / 值得关注的方向 / 推荐练习」，
+ * 不做人格类型、不做心理等级结论。
+ * ========================================================================= */
+(function () {
+  "use strict";
+
+  var SCALE_WORDS = ["很少", "偶尔", "有时", "经常", "很明显"];
+
+  var QUESTIONS = [
+    { key: "q1", text: "当事情发生时，我常常会马上就有反应。", needSign: "high" },
+    { key: "q2", text: "我能注意到自己的情绪正在变化。", needSign: "low" },
+    { key: "q3", text: "我能看出，在类似的事情上，我常常用同一种方式应对。", needSign: "low" },
+    { key: "q4", text: "情绪很冲的时候，我能先停下来，而不是立刻发作。", needSign: "low" },
+    { key: "q5", text: "我会回头想想那些反复困扰我的问题。", needSign: "low" }
+  ];
+
+  var FOCUS_TEXT = {
+    q1: "练习在反应之前，先给自己一个“停一下”的间隙",
+    q2: "练习留意自己情绪的变化——哪怕只是“我在生气”“我在紧张”",
+    q3: "练习认出自己在哪些相似情境里，反复用同一种方式应对",
+    q4: "练习在情绪最冲的时候，先拉开一点距离，再决定怎么回应",
+    q5: "练习定期回头看看，自己正在重复哪些模式"
+  };
+  /* 每个方向对应中央区里的课程 */
+  var COURSE_MAP = { q1: "c1", q2: "c3", q3: "c2", q4: "c4", q5: "c5" };
+
+  function courseById(id) {
+    var cs = window.COURSES || [];
+    for (var i = 0; i < cs.length; i++) if (cs[i].id === id) return cs[i];
+    return null;
+  }
+
+  /* answers: {q1:1..5, ...} */
+  function buildPortrait(answers) {
+    var total = 0, scored = [];
+    for (var i = 0; i < QUESTIONS.length; i++) {
+      var q = QUESTIONS[i], v = answers[q.key];
+      v = Math.max(1, Math.min(5, Number(v) || 3));
+      var need = q.needSign === "high" ? v : 6 - v;   // 需要关注的程度 1..5
+      total += need;
+      scored.push({ q: q.key, need: need });
+    }
+    scored.sort(function (a, b) { return b.need - a.need; });
+
+    var focus = [], seen = {};
+    for (var k = 0; k < scored.length && focus.length < 2; k++) {
+      if (scored[k].need >= 2 && !seen[scored[k].q]) {
+        seen[scored[k].q] = true;
+        focus.push({ q: scored[k].q, text: FOCUS_TEXT[scored[k].q], need: scored[k].need });
+      }
+    }
+    if (!focus.length) {
+      /* 五项都比较稳时，仍给一个温和的“保持方向” */
+      focus.push({ q: "q2", text: "现在的状态已经比较稳，可以继续在“留意自己的反应”上保持练习", need: 0 });
+    }
+
+    /* 推荐课程：由关注方向映射，不足时补第一课 */
+    var recommendIds = [], seenC = {};
+    for (var m = 0; m < focus.length; m++) {
+      var cid = COURSE_MAP[focus[m].q];
+      if (cid && !seenC[cid]) { seenC[cid] = true; recommendIds.push(cid); }
+    }
+    if (!recommendIds.length) recommendIds.push("c1");
+
+    var state;
+    if (total <= 9) {
+      state = "你已经开始留意自己的反应，这个起点本身就很难得。接下来的练习，会把“事后想明白”，慢慢练成“当场就看见”。";
+    } else if (total <= 16) {
+      state = "大多数时候，你是在事情过去之后才想明白；真正难的，是“当下的那几秒”。这几节课程，会陪你在最容易被带走的时刻，练习先停一停。";
+    } else {
+      state = "情绪或冲突来得很快的时候，你常常来不及刹车。这里不会评判你，只会陪你一小步一小步地练：看见它、暂停一下、再选择怎么回应。";
+    }
+
+    return {
+      state: state,
+      focus: focus.map(function (f) { return { q: f.q, text: f.text }; }),
+      recommendIds: recommendIds,
+      raw: { total: total, answers: answers }
+    };
+  }
+
+  function scaleWord(n) { return SCALE_WORDS[n - 1] || ""; }
+
+  window.ASSESS = {
+    intro: "下面 5 个句子，请按最近一两周的真实感受，为每句选一个最接近的数字。没有对错，也不是考试。",
+    questions: QUESTIONS,
+    scaleWords: SCALE_WORDS,
+    scaleWord: scaleWord,
+    buildPortrait: buildPortrait,
+    courseMap: COURSE_MAP
+  };
+})();
+</script>
+  <script>
+/* =========================================================================
+ * 成长空间 · 第一阶段 5 节真实课程（全部归属「中央区 · 自我认知与反应」）
+ * body 块类型：h=小标题 / p=正文 / case=生活案例
+ * 语言要求：简单、温和、日常、可马上练、不贴标签。
+ * ========================================================================= */
+(function () {
+  "use strict";
+
+  var COURSES = [
+    /* ---------------- 第 1 节 ---------------- */
+    {
+      id: "c1", regionId: "center", order: 1,
+      title: "我为什么总是下意识地这样反应？",
+      minutes: 8,
+      summary: "认识“自动反应”：它在很多瞬间替你做了决定，而你并不知情。",
+      body: [
+        { t: "h", x: "你有没有过这样的时刻？" },
+        { t: "p", x: "一句话还没听完，火气已经上来了；对方只是看了你一眼，你心里已经翻江倒海；等事情过去，你甚至有点后悔：“我刚刚怎么就那样了？”" },
+        { t: "p", x: "这些“刹不住”的瞬间，不是只有你一个人会遇到。它们来自一套你自己都未必知道的“自动反应”——像手机里预设好的快捷键：一个刺激进来，程序已经跑完了，你才后知后觉。" },
+        { t: "h", x: "自动反应是什么？" },
+        { t: "p", x: "它是我们在成长过程里慢慢养成的、几乎不用思考的应对方式。小时候有用，就一直被保留下来。比如：小时候一被批评就习惯性沉默，长大后面对“被否定”，还是先躲开；小时候哭闹能得到关注，长大后遇到落差，第一反应仍是闹情绪。" },
+        { t: "p", x: "自动反应本身不坏，它让我们省力。问题只在于：它常常替你做了决定，而你并不知情，也未必同意。" },
+        { t: "h", x: "这节课想让你带走什么？" },
+        { t: "p", x: "不需要立刻改掉什么。这节课只想先帮你认出：“哦，原来我刚才那样反应，可能不是此刻真实的我想要的，而是一个自动跑起来的旧程序。”——看见，是改变的第一步。" },
+        { t: "case", x: "小何和室友合租，室友又一次没洗碗就出了门。小何看到水槽，火“腾”地一下上来，脑子里已经想好十分钟后要怎么怼人。她坐下来喘了几口气才发现：真正让她难受的，不是“没洗碗”这件小事，而是“我说了很多次，你却总不当回事”那种被忽视的感觉。是那种感觉启动了自动反应，而不是水槽本身。" },
+        { t: "h", x: "一个可以马上试的小提醒" },
+        { t: "p", x: "接下来几天，只做一件事：当那股“腾”的一下上来时，先别急着行动，只在心里说一句“它来了”。光是这一句，你就已经从“被它带着跑”，站到了“看着它跑”的位置。" }
+      ],
+      practice: {
+        title: "今日练习 · 标记一次“它来了”",
+        steps: [
+          "回想最近两三天里“火一下子上来”的某个瞬间（现在回想也可以）。",
+          "别评判自己，只是在心里或纸上标记一句：它来了。",
+          "试着再补一句：那一刻，我身体哪里先有感觉？（脸发烫、胸口紧、手攥紧……）"
+        ],
+        prompt: "写下你标记到的那一次反应（留空也可以，想到了再回来写）"
+      },
+      reflections: [
+        { q: "回想最近一次让你“刹不住”的事，真正启动它的，是什么？", hint: "比如：不是那件小事本身，而是某种“不被当回事”的感觉" }
+      ],
+      feedback: {
+        text: "很棒，你已经开始把镜头转向自己了。自动反应不可怕，可怕的是我们对它毫无察觉。今天你看见了它一次，这就是实实在在的第一步。",
+        tip: "下一节，我们去看看，这个自动反应是怎么一步步“演”起来的。"
+      }
+    },
+
+    /* ---------------- 第 2 节 ---------------- */
+    {
+      id: "c2", regionId: "center", order: 2,
+      title: "看见自己的自动化反应",
+      minutes: 6,
+      summary: "给自己的反应放一个慢镜头，看清“触发→解读→情绪→动作”是怎么连起来的。",
+      body: [
+        { t: "h", x: "给反应放慢镜头" },
+        { t: "p", x: "上一节我们标记了“它来了”。这一节，我们把它拆开看：像把一段视频放慢，你会发现反应并不是一秒钟发生的，它其实是一串很短的连锁——" },
+        { t: "p", x: "触发 → 心里的解读 → 情绪 → 行动。" },
+        { t: "p", x: "比如同事说“你效率好低”。触发是一句话；心里的解读是“他在否定我的能力”；情绪是愤怒和委屈；行动是顶回去，或冷战。可很多时候，我们把中间两格都跳过了，直接以为是“这句话让我很生气”。" },
+        { t: "p", x: "而中间那两格，恰恰是真正由你控制的地方。" },
+        { t: "h", x: "同一个触发，可以有不同解读" },
+        { t: "p", x: "同样一句“你效率好低”，可以解读成“他在针对我”，也可以解读成“他今天心情不好，随口一说”。解读不同，情绪和行动就完全不同。你未必能控制别人说什么，但你有机会看见自己是怎么解读的。" },
+        { t: "h", x: "慢镜头回放怎么做" },
+        { t: "p", x: "找一件让你有情绪的事，问自己四句：① 刚刚发生了什么？（只描述事实，不加评价）② 我心里给它安了什么解读？③ 我起了什么情绪？④ 我做了什么？" },
+        { t: "p", x: "写下来，不用分析得多漂亮，看得见就好。这个动作本身，就是“看见自动化反应”。" },
+        { t: "case", x: "小何回想到那次水槽，用四句话回放：① 室友又没洗碗就出门了（事实）；② 我心里：他就是不尊重我、把我的话当耳旁风（解读）；③ 情绪：愤怒，还有一点委屈；④ 行动：想发消息冷嘲热讽。写完之后她自己笑了：“其实他没洗，可能是赶早班真的忘了。”解读一换，火气就小了大半。" }
+      ],
+      practice: {
+        title: "今日练习 · 给反应做一次四句回放",
+        steps: [
+          "挑一件最近让你有点情绪的小事。",
+          "按顺序写四句：发生了什么（事实）→ 我的解读 → 我的情绪 → 我做了什么。",
+          "最后问自己一句：如果换一种解读，还会是同一个故事吗？"
+        ],
+        prompt: "把这次回放写在这里（四句或长或短都可以）"
+      },
+      reflections: [
+        { q: "用这四句回放最近一次让你不快的小事，卡在最难的是哪一步？", hint: "多数人卡在“只描述事实，不加评价”这一步" },
+        { q: "如果换一种解读，这件事还会是同一个故事吗？", hint: "不用勉强，想一想就好" }
+      ],
+      feedback: {
+        text: "你已经能把自己当成“观察者”来看自己的反应了，这是很了不起的能力。看见解读，就看见了一个可以转动的开关。",
+        tip: "下一节，我们聊聊情绪本身：情绪出现时，你身上到底发生了什么。"
+      }
+    },
+
+    /* ---------------- 第 3 节 ---------------- */
+    {
+      id: "c3", regionId: "center", order: 3,
+      title: "情绪出现时，我真正发生了什么？",
+      minutes: 8,
+      summary: "把情绪当成身体的信号来读，而不是一件需要立刻处理的麻烦。",
+      body: [
+        { t: "h", x: "情绪不是敌人" },
+        { t: "p", x: "很多人一有情绪就慌：“我又生气了”“我又焦虑了”。但情绪本身不是问题，它更像身体发来的一条消息——像仪表盘上亮起的灯，提醒你：“这里有点事，需要你注意一下。”" },
+        { t: "p", x: "灯亮了，你不必砸仪表盘，也不必假装没看见；你只需要先读一读它。" },
+        { t: "h", x: "情绪来时，身体先动" },
+        { t: "p", x: "留意一下：生气时是不是胸口发紧、呼吸变浅？紧张时是不是肩膀耸起来、手心出汗？难过时是不是觉得喉咙堵、身体往下沉？情绪从来不只是“脑子里的事”，它一直有身体的信号。" },
+        { t: "p", x: "所以“管理情绪”的第一步，常常不是讲道理，而是先照顾身体：让呼吸慢一点、让肩膀落下来、给自己倒杯水。" },
+        { t: "h", x: "给情绪命名，能帮它降温" },
+        { t: "p", x: "有个很朴素的经验：当你把“我不舒服”具体成“我是愤怒”“我是委屈”“我是害怕被忽视”，情绪本身的浓度会降下来一些。命名，是给它一个出口，让它不再只是雾蒙蒙地堵在胸口。" },
+        { t: "h", x: "别急着“解决”，先“陪伴”" },
+        { t: "p", x: "我们习惯一有情绪就想立刻把它弄走。可很多时候，情绪只是需要被承认一下：“是的，我现在很生气，这很正常。”承认之后，它反而不那么急着要你反应了。" },
+        { t: "case", x: "小何那天没有怼室友，而是坐在床边做了三件事：① 承认——在心里说“我很生气，还很委屈”；② 找身体——她发现自己的手一直是攥紧的，于是松开，深呼吸了三次；③ 命名——她写下来：“我是因为觉得被忽视而难过，不全是愤怒。”做完这些，她发现自己没那么想发那条消息了。" }
+      ],
+      practice: {
+        title: "今日练习 · 读一读你的情绪信号",
+        steps: [
+          "下次情绪上来时（或回想最近一次），先不急着处理它。",
+          "问身体：我现在胸口、肩膀、手、呼吸，是什么感觉？",
+          "试着给它一个名字：愤怒？委屈？害怕？还是别的什么？在纸上写下来。"
+        ],
+        prompt: "写下你读到的身体信号和情绪的名字"
+      },
+      reflections: [
+        { q: "最近一次情绪比较猛的时候，你的身体先有什么感觉？", hint: "哪怕只是“手攥紧了”也算" },
+        { q: "试着把那团“不舒服”说具体：它更像愤怒、委屈、害怕，还是别的什么？", hint: "说得出名字，它就不再是模糊的一片" }
+      ],
+      feedback: {
+        text: "你已经学会把情绪当作信号来读了，而不是把它当成要赶走的麻烦。能说得出名字的情绪，就不再是堵在胸口的那一片。",
+        tip: "下一节是整条路的关键一步：从“马上反应”，到“先停一下”。"
+      }
+    },
+
+    /* ---------------- 第 4 节 ---------------- */
+    {
+      id: "c4", regionId: "center", order: 4,
+      title: "从“马上反应”到“先停一下”",
+      minutes: 7,
+      summary: "在“发生”与“回应”之间，插入那珍贵的几秒钟。",
+      body: [
+        { t: "h", x: "那几秒，是你的" },
+        { t: "p", x: "从刺激进来，到你做出回应，中间其实有一个小小的缝隙。平时它短得几乎不存在；但你可以练出来——在事情发生的当下，先抓住那几秒。" },
+        { t: "p", x: "这几秒里，你什么都不用做对，只需要不立刻行动。" },
+        { t: "h", x: "“暂停按钮”怎么按？" },
+        { t: "p", x: "可以记住三个简单的动作，不必每次全用，先会用其中一个就好：深呼吸一次，把注意力放回呼吸上，身体会先慢下来；再说出此刻的状态——“我现在很生气”“我很紧张”，说出来，就是提醒自己回到当下；然后问自己一句：“我现在回应，是因为我真的想这么做，还是被情绪推着走？”" },
+        { t: "h", x: "暂停不等于压抑" },
+        { t: "p", x: "先停一下，不是把情绪咽回去、假装没事。恰恰相反：是先不急着“发作”，给自己一点时间，好让你真正想说的话、想做的事，是出自你，而不是出自情绪。" },
+        { t: "h", x: "从“事后后悔”，到“当场选择”" },
+        { t: "p", x: "习惯了暂停之后，你会发现很多原来必吵的架可以不吵，很多原来必发的火可以不发。不是你变软了，而是那些回应，终于经过了你的同意。" },
+        { t: "case", x: "周五晚上，小何的妈妈又打电话提起“别人家的孩子都结婚了”。搁在以前，小何一定会提高音量怼回去，然后以挂电话收场。这一次，她在开口前先呼了一口气，说：“妈，我知道你为我好。但这句话让我压力很大，我们先不聊这个，好吗？”妈妈愣了一下，居然真的换了个话题。当晚小何写下：原来我不是只能“发火”或“忍着”，还有第三种。" }
+      ],
+      practice: {
+        title: "今日练习 · 找到一个你的“暂停键”",
+        steps: [
+          "找出一个你最容易“秒回”的场景（被反驳、被催、被打断……）。",
+          "为自己设计一句“暂停暗号”，比如深呼吸一次，或默念“先不急着回”。",
+          "如果这几天真的用上了，就记下来发生了什么变化。"
+        ],
+        prompt: "写下你的暂停键，或一次真正用上它的经历"
+      },
+      reflections: [
+        { q: "回想一个你常常“秒回”的场景，你的暂停按钮，可以放在哪一步？", hint: "比如“拿起手机准备回消息之前”" },
+        { q: "“先停一下”和“把情绪忍下去”，在你看来有什么不同？", hint: "一个是选择，一个是压抑" }
+      ],
+      feedback: {
+        text: "你已经在刺激和回应之间，插入了属于你的那几秒。这是整条路上最关键的一步——选择权，正在一点一点回到你手里。",
+        tip: "最后一节，我们退后一步看整体：你正在重复什么模式？"
+      }
+    },
+
+    /* ---------------- 第 5 节 ---------------- */
+    {
+      id: "c5", regionId: "center", order: 5,
+      title: "复盘：我正在重复什么模式？",
+      minutes: 7,
+      summary: "把几件事放在一起看，认出那个反复出现的“剧本”。",
+      body: [
+        { t: "h", x: "单看每一件，都像是偶然" },
+        { t: "p", x: "单看某一天，你会觉得“今天就是倒霉”。可如果把时间拉长，把好几件让你难受的事并排放在一起，你常常会看到同一个影子：相似的触发、相似的情绪、相似的结局。" },
+        { t: "p", x: "那个反复出现的影子，就是你的模式，也是你总在同一个地方反复跌倒的原因。" },
+        { t: "h", x: "怎么复盘，而不自责" },
+        { t: "p", x: "复盘最忌讳的是变成自我批评：“我怎么又这样！”记住一个原则——我们是来看地图的，不是来贴罪名的。" },
+        { t: "p", x: "试着写一份很短的“模式单”：① 最近一两周，有没有至少两次让我类似地难受的事？② 它们的触发有没有相似之处？（都是被否定？被忽略？事情失控？）③ 我的反应模式是什么？（沉默、发火、逃避、讨好……）④ 这个反应，曾经在什么时候帮过我？" },
+        { t: "p", x: "最后一句尤其重要：每个模式，都曾是某个时刻的“求生工具”。看见它曾经有用，你才能温柔地放下它，而不是恨它。" },
+        { t: "h", x: "看见一次，就松一分" },
+        { t: "p", x: "模式不会因为“看一次”就消失，但它会因为你反复看见而慢慢松动。就像一条走了很多年的路，你终于发现旁边还有一条小路。你不用立刻换路，光知道“还有别的可能”，就已经不同了。" },
+        { t: "h", x: "到这里，你已经走完了第一阶段" },
+        { t: "p", x: "从标记“它来了”，到拆解反应，到读懂情绪，到按下暂停，再到今天看见模式——你已经把一条完整的路走了一遍。往后的日子，不必每天学新课，只需要把这几件事，偶尔回来做一次。" },
+        { t: "case", x: "小何把这一周三件事放在一起：室友没洗碗、妈妈催婚、同事一句评价。她忽然发现，三件事的触发都是“我觉得自己不被尊重/不被认可”；她的反应都是先委屈、后发火。她也看见：这个模式曾经在小时候保护过她——那时她需要用力证明自己，才不会被忽视。写到这里，她第一次没有骂自己“怎么又这样”，而是轻轻叹了口气：“原来你陪了我这么久。”" }
+      ],
+      practice: {
+        title: "今日练习 · 画一张属于你的“模式单”",
+        steps: [
+          "把最近让你难受的两三件事放在一起。",
+          "找共同点：触发相似吗？我的反应相似吗？结局相似吗？",
+          "写下最后一句：这个模式，曾经在什么时候帮过我？"
+        ],
+        prompt: "把你的模式单写在这里"
+      },
+      reflections: [
+        { q: "把最近让你难受的两三件事放在一起看，它们有没有共同的触发？", hint: "比如：都是“不被当回事”的感觉" },
+        { q: "你那个反复出现的反应，曾经在什么时候，其实是帮过你的？", hint: "想到什么写什么，不必讲给谁听" }
+      ],
+      feedback: {
+        text: "恭喜你，第一阶段五节课全部走完了。你已经拥有了一个很珍贵的能力：在反应发生之前，先看见它。请记得对自己温柔一些——看见，本身就是改变。",
+        tip: "回到首页和“我的档案”看看吧，那里正记录着你一步步走来的样子。"
+      }
+    }
+  ];
+
+  function byId(id) {
+    for (var i = 0; i < COURSES.length; i++) if (COURSES[i].id === id) return COURSES[i];
+    return null;
+  }
+  function ofRegion(regionId) {
+    return COURSES.filter(function (c) { return c.regionId === regionId; })
+      .sort(function (a, b) { return a.order - b.order; });
+  }
+  function nextAfter(id) {
+    var c = byId(id); if (!c) return null;
+    return COURSES.filter(function (x) { return x.order === c.order + 1; })[0] || null;
+  }
+
+  window.COURSES = COURSES;
+  window.Course = { byId: byId, ofRegion: ofRegion, nextAfter: nextAfter };
+})();
+</script>
+  <!-- 页面层 -->
+  <script>
+/* =========================================================================
+ * 首页：今天想给自己留 10 分钟吗？→ 今日课程 / 今日练习 / 成长进度
+ * ========================================================================= */
+(function () {
+  "use strict";
+  window.Pages = window.Pages || {};
+
+  function statCell(k, v) {
+    return '<div class="stat"><b>' + UI.esc(v) + '</b><span>' + k + '</span></div>';
+  }
+
+  Pages.home = {
+    title: "成长空间",
+    render: function () {
+      var st = Store.stats();
+      var esc = UI.esc;
+      var hr = new Date().getHours();
+      var greet = hr < 5 ? "夜深了，辛苦了" : hr < 11 ? "早上好" : hr < 14 ? "中午好" : hr < 18 ? "下午好" : "晚上好";
+      var recId = Store.nextCourseId();
+      var rec = recId ? Course.byId(recId) : null;
+      var h = [];
+
+      h.push('<section class="hero">' +
+        '<div class="hero-row"><span class="brand-mini">成长空间</span><span class="streak-chip">连续成长 ' + st.streak + ' 天</span></div>' +
+        '<p class="greet">' + greet + '</p>' +
+        '<h2 class="hero-q">今天，你想给自己<br>留 10 分钟吗？</h2></section>');
+
+      if (rec) {
+        var stateLabel = Store.isDone(rec.id) ? "再学一次" : (Store.courseState(rec.id) === "started" ? "继续" : "开始");
+        h.push('<section class="card today-card">' +
+          '<div class="card-head"><span class="label">今日课程</span></div>' +
+          '<h3>' + esc(rec.title) + '</h3>' +
+          '<p class="meta muted">预计 ' + rec.minutes + ' 分钟 · 中央区 · 第 ' + rec.order + ' 节</p>' +
+          '<p class="sub">' + esc(rec.summary) + '</p>' +
+          '<button class="btn primary wide" data-go-lesson="' + rec.id + '">' + stateLabel + '今天的成长</button>' +
+          '</section>');
+
+        h.push('<section class="card soft">' +
+          '<div class="card-head"><span class="label">今日练习</span></div>' +
+          '<p class="pt">' + esc(rec.practice.title) + '</p>' +
+          '<button class="link" data-go-lesson="' + rec.id + '">去做练习 →</button>' +
+          '</section>');
+      } else {
+        h.push('<section class="card done-card">' +
+          '<div class="big">完成</div>' +
+          '<h3>第一阶段 5 节都走完了</h3>' +
+          '<p>你已经有“在反应之前先看见它”的能力了。之后可以把练习偶尔带回来重温，也可以去档案里看看自己走过的路。</p>' +
+          '<div class="btnrow"><button class="btn ghost" data-go="archive">去看我的档案</button>' +
+          '<button class="btn primary" data-assess="1">更新一次状态</button></div></section>');
+      }
+
+      var pct = st.coursesTotal ? Math.round(st.coursesDone / st.coursesTotal * 100) : 0;
+      h.push('<section class="card">' +
+        '<div class="card-head"><span class="label">我的成长进度</span><span class="muted">' + st.coursesDone + ' / ' + st.coursesTotal + ' 节</span></div>' +
+        '<div class="bar"><i style="width:' + pct + '%"></i></div>' +
+        '<div class="statrow">' +
+        statCell("课程", st.coursesDone + " / " + st.coursesTotal) +
+        statCell("练习", st.practiceDone + " / " + st.coursesTotal) +
+        statCell("连续成长", st.streak + " 天") +
+        '</div></section>');
+
+      h.push('<p class="today-note">' +
+        (st.todayActive ? "今天已经留下成长记录 ☺" : "今天还没有记录——完成今天这节课，就会留下今天的第一笔。") +
+        '</p>');
+
+      return h.join("");
+    },
+    bind: function (v) {
+      var els = UI.$all("[data-go-lesson]", v);
+      for (var i = 0; i < els.length; i++) els[i].addEventListener("click", goLesson);
+      var a = UI.$all("[data-go]", v);
+      for (var j = 0; j < a.length; j++) (function (b) {
+        b.addEventListener("click", function () { Router.navigate(b.getAttribute("data-go")); });
+      })(a[j]);
+      var as = UI.$all("[data-assess]", v);
+      for (var k = 0; k < as.length; k++) as[k].addEventListener("click", function () {
+        Router.navigate("assess", { mode: "redo" });
+      });
+    }
+  };
+  function goLesson(e) {
+    var id = e.currentTarget.getAttribute("data-go-lesson");
+    Store.markStarted(id);
+    Router.navigate("lesson", { id: id });
+  }
+})();
+</script>
+  <script>
+/* =========================================================================
+ * 成长路线（9 区 3×3 空间地图） + 区域详情
+ * ========================================================================= */
+(function () {
+  "use strict";
+  window.Pages = window.Pages || {};
+
+  function zoneStatusText(r) {
+    if (r.status === "live") return "可学习";
+    return "即将开放";
+  }
+
+  Pages.route = {
+    title: "成长路线",
+    render: function () {
+      var st = Store.stats();
+      var cells = [], R = GData.regions;
+      for (var i = 0; i < R.length; i++) {
+        var r = R[i], live = r.status === "live";
+        var count = "";
+        if (live) {
+          var total = (Course.ofRegion(r.id)).length;
+          var done = 0, c;
+          for (var j = 0; j < total; j++) { c = Course.ofRegion(r.id)[j]; if (Store.isDone(c.id)) done++; }
+          count = '<span class="zc-count">' + done + ' / ' + total + '</span>';
+        }
+        cells.push('<a class="zone-cell' + (live ? " live" : "") + '" style="grid-row:' + r.pos.r + ';grid-column:' + r.pos.c +
+          '" data-zone="' + r.id + '"><span class="zc-name">' + UI.esc(r.name) + '</span>' +
+          count +
+          '<span class="zc-status' + (live ? " ok" : "") + '">' + zoneStatusText(r) + '</span></a>');
+      }
+      return '<p class="page-intro">9 个成长方向。第一阶段先专注中央区「自我认知与反应」，其余方向正在准备，会陆续开放。</p>' +
+        '<div class="zonemap">' + cells.join("") + '</div>' +
+        '<p class="muted small center">总进度：' + st.coursesDone + ' / ' + st.coursesTotal + ' 节</p>';
+    },
+    bind: function (v) {
+      var els = UI.$all(".zone-cell", v);
+      for (var i = 0; i < els.length; i++) (function (b) {
+        b.addEventListener("click", function () {
+          Router.navigate("zone", { id: b.getAttribute("data-zone") });
+        });
+      })(els[i]);
+    }
+  };
+
+  Pages.zone = {
+    hideTab: true,
+    title: function (p) {
+      var r = GData.regionById(p.id); return r ? r.name : "成长方向";
+    },
+    render: function (p) {
+      var r = GData.regionById(p.id);
+      if (!r) return '<p>没有这个区域。</p>';
+      var h = [];
+      h.push('<section class="card">' +
+        '<div class="zone-head"><h2>' + UI.esc(r.name) + '</h2>' +
+        '<span class="tag ' + r.status + '">' + zoneStatusText(r) + '</span></div>' +
+        '<p class="sub">' + UI.esc(r.intro) + '</p></section>');
+
+      /* 子主题模块 */
+      h.push('<section class="mods"><div class="label">这个方向包含</div>');
+      for (var i = 0; i < r.subTopics.length; i++) {
+        h.push('<div class="mod' + (r.status === "live" ? "" : " soon") + '"><span class="dot"></span>' +
+          UI.esc(r.subTopics[i]) +
+          (r.status === "soon" ? '<span class="soon-tag">1 课时 · 即将开放</span>' : "") +
+          '</div>');
+      }
+      h.push('</section>');
+
+      if (r.status === "live") {
+        var cs = Course.ofRegion(r.id);
+        h.push('<section class="lessons"><div class="label">本区课程</div>');
+        for (var k = 0; k < cs.length; k++) {
+          var c = cs[k], done = Store.isDone(c.id);
+          h.push(lessonRow(c, done, true));
+        }
+        h.push('</section>');
+      } else {
+        h.push('<section class="coming-card"><p>这个区域正在认真准备中。</p><p class="muted small">第一阶段建议先把中央区走完，其余方向会陆续在这里开放。</p></section>');
+      }
+      return h.join("");
+    },
+    bind: function (v) {
+      bindLessonRows(v);
+    }
+  };
+
+  function lessonRow(c, done, clickable) {
+    var mark = done ? "done" : (Store.courseState(c.id) === "started" ? "doing" : "");
+    var label = done ? "已完成" : Store.courseState(c.id) === "started" ? "继续" : "开始";
+    return '<div class="lesson-row ' + mark + '" data-go-lesson="' + c.id + '" role="button">' +
+      '<div class="lr-main"><span class="lr-no">' + (c.order < 10 ? "0" : "") + c.order + '</span>' +
+      '<div class="lr-text"><b>' + UI.esc(c.title) + '</b><span class="muted small">预计 ' + c.minutes + ' 分钟' + (done ? " · 已完成" : "") + '</span></div></div>' +
+      '<span class="lr-cta">' + label + ' →</span></div>';
+  }
+
+  /* 供课程列表页复用：把页面里的课程行绑上进入学习 */
+  function bindLessonRows(v) {
+    var rows = UI.$all("[data-go-lesson]", v);
+    for (var i = 0; i < rows.length; i++) (function (b) {
+      b.addEventListener("click", function () {
+        var id = b.getAttribute("data-go-lesson");
+        Store.markStarted(id);
+        Router.navigate("lesson", { id: id });
+      });
+    })(rows[i]);
+  }
+  window.bindLessonRows = bindLessonRows;
+})();
+</script>
+  <script>
+/* =========================================================================
+ * 课程（Tab）：第一阶段课程列表
+ * ========================================================================= */
+(function () {
+  "use strict";
+  window.Pages = window.Pages || {};
+
+  Pages.course = {
+    title: "课程",
+    render: function () {
+      var st = Store.stats();
+      var cs = COURSES;
+      var pct = st.coursesTotal ? Math.round(st.coursesDone / st.coursesTotal * 100) : 0;
+      var h = [];
+      h.push('<p class="page-intro">第一阶段 · 中央区「自我认知与反应」。5 节小课，每节 6–8 分钟，按顺序一节一节来就好。</p>');
+      h.push('<div class="bar mini"><i style="width:' + pct + '%"></i></div>');
+      h.push('<p class="muted small center">' + st.coursesDone + ' / ' + st.coursesTotal + ' 节已完成</p>');
+      for (var i = 0; i < cs.length; i++) {
+        var c = cs[i], done = Store.isDone(c.id);
+        var mark = done ? "done" : (Store.courseState(c.id) === "started" ? "doing" : "");
+        var label = done ? "已完成" : Store.courseState(c.id) === "started" ? "继续 →" : "开始 →";
+        h.push('<div class="lesson-row ' + mark + '" data-go-lesson="' + c.id + '" role="button">' +
+          '<div class="lr-main"><span class="lr-no">0' + c.order + '</span>' +
+          '<div class="lr-text"><b>' + UI.esc(c.title) + '</b>' +
+          '<span class="muted small">预计 ' + c.minutes + ' 分钟' + (done ? " · 已完成 ✓" : "") + '</span></div></div>' +
+          '<span class="lr-cta">' + label + '</span></div>');
+      }
+      return h.join("");
+    },
+    bind: function (v) { window.bindLessonRows(v); }
+  };
+})();
+</script>
+  <script>
+/* =========================================================================
+ * 练习（Tab）：今日练习 + 全部练习 + 练习记录历史
+ * ========================================================================= */
+(function () {
+  "use strict";
+  window.Pages = window.Pages || {};
+
+  Pages.practice = {
+    title: "练习",
+    render: function () {
+      var st = Store.stats();
+      var recId = Store.nextCourseId();
+      var rec = recId ? Course.byId(recId) : null;
+      var h = [];
+      h.push('<p class="page-intro">练习跟着课程走：读完一节，再做一次小练习。练习会自动记入你的成长记录。</p>');
+
+      if (rec) {
+        h.push('<section class="card today-practice">' +
+          '<div class="card-head"><span class="label">今日练习</span><span class="muted">第 ' + rec.order + ' 节 · ' + rec.minutes + ' 分钟</span></div>' +
+          '<h3>' + UI.esc(rec.practice.title) + '</h3>' +
+          '<ol class="steps">');
+        var steps = rec.practice.steps;
+        for (var s = 0; s < steps.length; s++) h.push('<li>' + UI.esc(steps[s]) + '</li>');
+        h.push('</ol><button class="btn primary wide" data-go-lesson="' + rec.id + '">去做这节练习</button></section>');
+      } else {
+        h.push('<section class="card done-card"><h3>第一阶段练习都完成啦</h3>' +
+          '<p>随时可以回来重做任一节练习，或到档案里回顾之前的记录。</p></section>');
+      }
+
+      /* 全部练习 */
+      h.push('<section class="card"><div class="card-head"><span class="label">全部练习</span></div>');
+      var cs = COURSES;
+      for (var i = 0; i < cs.length; i++) {
+        var c = cs[i];
+        var practiced = Store.isDone(c.id);
+        h.push('<div class="lesson-row ' + (practiced ? "done" : "") + '" data-go-lesson="' + c.id + '" role="button">' +
+          '<div class="lr-main"><div class="lr-text"><b>' + UI.esc(c.practice.title) + '</b>' +
+          '<span class="muted small">' + UI.esc(c.title) + (practiced ? " · 已完成 ✓" : "") + '</span></div></div>' +
+          '<span class="lr-cta">' + (practiced ? "重做 →" : "去练 →") + '</span></div>');
+      }
+      h.push('</section>');
+
+      /* 历史 */
+      var arr = Store.practices();
+      h.push('<section class="card"><div class="card-head"><span class="label">练习记录</span><span class="muted">共 ' + arr.length + ' 次</span></div>');
+      if (!arr.length) {
+        h.push('<p class="muted small">还没有练习记录。完成第一节课后，这里会出现你的第一次练习。</p>');
+      } else {
+        h.push('<ul class="timeline">');
+        for (var k = 0; k < Math.min(arr.length, 30); k++) {
+          var it = arr[k];
+          h.push('<li><span class="tl-date">' + UI.friendlyDate(it.date) + '</span>' +
+            '<div class="tl-main"><b>' + UI.esc(courseTitleOf(it.courseId)) + '</b>' +
+            (it.note ? '<p class="note">' + UI.esc(it.note) + '</p>' : '<p class="note muted">·</p>') +
+            '</div></li>');
+        }
+        h.push('</ul>');
+      }
+      h.push('</section>');
+      return h.join("");
+    },
+    bind: function (v) {
+      var els = UI.$all("[data-go-lesson]", v);
+      for (var i = 0; i < els.length; i++) (function (b) {
+        b.addEventListener("click", function () {
+          var id = b.getAttribute("data-go-lesson");
+          Store.markStarted(id);
+          Router.navigate("lesson", { id: id });
+        });
+      })(els[i]);
+    }
+  };
+
+  function courseTitleOf(id) {
+    var c = Course.byId(id);
+    return c ? "《" + c.title + "》" : "练习";
+  }
+})();
+</script>
+  <script>
+/* =========================================================================
+ * 课程学习页：阅读 → 今日练习 → 自我反思 → 完成/保存 → 完成反馈
+ * 数据在“完成”那一刻一次性写入（课程进度 + 练习 + 成长记录）。
+ * ========================================================================= */
+(function () {
+  "use strict";
+  window.Pages = window.Pages || {};
+
+  var cur = null;          // 当前课程
+  var state = null;        // { stage:0..3, note:'', refs:[] }
+
+  function reset(c) {
+    cur = c;
+    state = { stage: 0, note: "", refs: [], saved: false };
+  }
+
+  function bodyHtml(c) {
+    var h = [];
+    for (var i = 0; i < c.body.length; i++) {
+      var b = c.body[i];
+      if (b.t === "h") h.push('<h4 class="body-h">' + UI.esc(b.x) + '</h4>');
+      else if (b.t === "case") h.push('<div class="case"><span class="case-tag">一个生活里的场景</span><p>' + UI.esc(b.x) + '</p></div>');
+      else h.push('<p class="body-p">' + UI.esc(b.x) + '</p>');
+    }
+    return h.join("");
+  }
+
+  /* 顶部进度指示：三个步骤 */
+  function stepDots(stage) {
+    var labels = ["阅读", "练习", "反思"];
+    var h = ['<div class="stepper">'];
+    for (var i = 0; i < 3; i++) {
+      var cls = i < stage ? "on" : (i === stage ? "cur" : "");
+      h.push('<span class="step ' + cls + '"><i>' + (i + 1) + '</i>' + labels[i] + '</span>');
+    }
+    h.push('</div>');
+    return h.join("");
+  }
+
+  function draw() {
+    var c = cur, s = state;
+    var done = Store.isDone(c.id);
+    var v = UI.$("#view");
+    var h = [];
+
+    /* 头信息 */
+    h.push('<div class="lesson-head">');
+    h.push('<div class="lh-meta"><span class="tag ok">中央区 · 自我认知与反应</span><span class="muted">预计 ' + c.minutes + ' 分钟</span></div>');
+    h.push('<h2>' + UI.esc(c.title) + '</h2>');
+    h.push('<p class="sub">' + UI.esc(c.summary) + '</p>');
+    if (done && s.stage < 3) h.push('<div class="ribbon">已完成 ✓ · 可以复习，或再做一次练习/反思</div>');
+    h.push(stepDots(Math.min(s.stage, 2)));
+    h.push('</div>');
+
+    if (s.stage === 0) {
+      h.push('<article class="reading">' + bodyHtml(c) + '</article>');
+      h.push('<div class="action-bar"><button class="btn primary wide" id="toPractice">我已经读完 → 进入今日练习</button></div>');
+    } else if (s.stage === 1) {
+      h.push('<section class="card">');
+      h.push('<div class="card-head"><span class="label">今日练习</span></div>');
+      h.push('<h3>' + UI.esc(c.practice.title) + '</h3>');
+      h.push('<ol class="steps">');
+      for (var i = 0; i < c.practice.steps.length; i++) h.push('<li>' + UI.esc(c.practice.steps[i]) + '</li>');
+      h.push('</ol>');
+      h.push('<label class="field"><span>' + UI.esc(c.practice.prompt) + '</span>' +
+        '<textarea id="note" rows="4" placeholder="写点什么，或先留白……"></textarea></label>');
+      h.push('<button class="btn primary wide" id="savePractice">保存我的练习</button>');
+      h.push('</section>');
+      h.push('<div class="btnrow center"><button class="link" id="backRead">← 回到课程内容</button></div>');
+    } else if (s.stage === 2) {
+      h.push('<section class="card">');
+      h.push('<div class="card-head"><span class="label">自我反思</span><span class="muted">想写就写，写不下也没关系</span></div>');
+      for (var r = 0; r < c.reflections.length; r++) {
+        var q = c.reflections[r];
+        h.push('<label class="field"><span class="q">' + UI.esc(q.q) + '</span>' +
+          (q.hint ? '<span class="hint">' + UI.esc(q.hint) + '</span>' : "") +
+          '<textarea data-ref="' + r + '" rows="2" placeholder="写下你的想法……"></textarea></label>');
+      }
+      var btn = done ? "保存这次的记录" : "完成这节课";
+      h.push('<button class="btn primary wide bigpad" id="finishLesson">' + btn + '</button>');
+      h.push('</section>');
+      h.push('<div class="btnrow center"><button class="link" id="backPractice">← 回到练习</button></div>');
+    } else {
+      /* stage 3：完成反馈 */
+      h.push('<section class="card finish">');
+      h.push('<div class="big">完成</div>');
+      h.push('<h3>' + (done ? '这节课复习完成' : '这节课完成') + '</h3>');
+      h.push('<p class="sub">' + UI.esc(c.feedback.text) + '</p>');
+      h.push('<div class="tip"><span>接下来</span>' + UI.esc(c.feedback.tip) + '</div>');
+      var next = Course.nextAfter(c.id);
+      h.push('<div class="btnrow">');
+      h.push('<button class="btn primary" id="goHome">回首页</button>');
+      if (next) h.push('<button class="btn ghost" id="goNext">下一节</button>');
+      h.push('<button class="btn ghost" id="goArchive">我的档案</button>');
+      h.push('</div></section>');
+    }
+
+    v.innerHTML = h.join("");
+    bind();
+    window.scrollTo(0, 0);
+  }
+
+  function bind() {
+    var s = state;
+    var el1 = UI.$("#toPractice", UI.$("#view"));
+    if (el1) el1.addEventListener("click", function () { s.stage = 1; draw(); });
+
+    var elB = UI.$("#backRead", UI.$("#view"));
+    if (elB) elB.addEventListener("click", function () { s.stage = 0; draw(); });
+
+    var save = UI.$("#savePractice", UI.$("#view"));
+    if (save) {
+      save.addEventListener("click", function () {
+        s.note = UI.$("#note", UI.$("#view")).value.trim();
+        s.saved = true;
+        UI.toast("练习已保存");
+        s.stage = 2;
+        draw();
+      });
+    }
+
+    var elP = UI.$("#backPractice", UI.$("#view"));
+    if (elP) elP.addEventListener("click", function () { s.stage = 1; draw(); });
+
+    /* 反思输入即时同步 */
+    var refs = UI.$all("[data-ref]", UI.$("#view"));
+    for (var i = 0; i < refs.length; i++) (function (ta) {
+      var idx = Number(ta.getAttribute("data-ref"));
+      if (s.refs[idx]) ta.value = s.refs[idx];
+      ta.addEventListener("input", function () { s.refs[idx] = ta.value.trim(); });
+    })(refs[i]);
+
+    var fin = UI.$("#finishLesson", UI.$("#view"));
+    if (fin) {
+      fin.addEventListener("click", function () {
+        fin.disabled = true;
+        var done = Store.isDone(cur.id);
+        if (done) Store.logSession(cur.id, { practiceNote: s.note });
+        else Store.completeCourse(cur.id, { practiceNote: s.note, reflections: s.refs.slice() });
+        s.stage = 3;
+        draw();
+      });
+    }
+
+    var home = UI.$("#goHome", UI.$("#view"));
+    if (home) home.addEventListener("click", function () { Router.navigate("home"); });
+    var nxt = UI.$("#goNext", UI.$("#view"));
+    if (nxt) nxt.addEventListener("click", function () {
+      var nx = Course.nextAfter(cur.id);
+      if (nx) Router.render("lesson", { id: nx.id });
+    });
+    var arch = UI.$("#goArchive", UI.$("#view"));
+    if (arch) arch.addEventListener("click", function () { Router.navigate("archive"); });
+  }
+
+  Pages.lesson = {
+    hideTab: true,
+    title: function (p) {
+      var c = Course.byId(p.id);
+      return c ? "第 " + c.order + " 节" : "课程";
+    },
+    render: function (p) {
+      var c = Course.byId(p.id) || COURSES[0];
+      reset(c);
+      return '<div class="page-loading">…</div>';
+    },
+    bind: function () { draw(); }
+  };
+})();
+</script>
+  <script>
+/* =========================================================================
+ * 我的成长档案：当前状态 / 统计 / 已完成课程 / 成长记录时间线 / 阶段复盘
+ * ========================================================================= */
+(function () {
+  "use strict";
+  window.Pages = window.Pages || {};
+
+  function journalLabel(t) {
+    return { assessment: "成长状态自评", course: "完成课程", practice: "做了一次练习" }[t] || "成长记录";
+  }
+
+  Pages.archive = {
+    title: "我的档案",
+    render: function () {
+      var prof = Store.getProfile();
+      var st = Store.stats();
+      var h = [];
+
+      /* ---- 当前成长状态 ---- */
+      if (prof && prof.portrait) {
+        var pt = prof.portrait;
+        h.push('<section class="card">');
+        h.push('<div class="card-head"><span class="label">当前成长状态</span>' +
+          (prof.revisedAt ? '<span class="muted">最近更新 ' + UI.friendlyDate(dateStr(prof.revisedAt)) + '</span>' : "") +
+          '</div>');
+        h.push('<p class="state-text">' + UI.esc(pt.state) + '</p>');
+        h.push('<div class="focus"><div class="focus-label">值得关注的方向</div>');
+        for (var f = 0; f < pt.focus.length; f++) h.push('<p class="focus-item">· ' + UI.esc(pt.focus[f].text) + '</p>');
+        h.push('</div>');
+        h.push('<div class="focus-label">推荐练习</div>');
+        var recs = pt.recommendIds;
+        h.push('<div class="chips">');
+        for (var c = 0; c < recs.length; c++) {
+          var cc = Course.byId(recs[c]);
+          if (cc) h.push('<button class="chip" data-go-lesson="' + cc.id + '">《' + UI.esc(cc.title) + '》</button>');
+        }
+        h.push('</div>');
+        h.push('<button class="btn ghost smallmt" data-assess="1">重新自评，更新我的状态</button>');
+        h.push('</section>');
+      } else {
+        h.push('<section class="card"><p class="muted">还没有做过成长状态自评。</p>' +
+          '<button class="btn primary" data-assess="1">现在做一次自评</button></section>');
+      }
+
+      /* ---- 统计 ---- */
+      h.push('<section class="statgrid">' +
+        statCell("完成课程", st.coursesDone + " / " + st.coursesTotal) +
+        statCell("练习次数", st.practiceDone + " 种") +
+        statCell("连续成长", st.streak + " 天") +
+        statCell("本周记录", st.thisWeek + " 条") +
+        '</section>');
+
+      /* ---- 已完成课程 ---- */
+      var done = Store.doneIds();
+      h.push('<section class="card"><div class="card-head"><span class="label">已完成课程</span><span class="muted">' + done.length + ' / ' + st.coursesTotal + '</span></div>');
+      if (!done.length) {
+        h.push('<p class="muted small">还没完成课程。去首页开始第一课吧。</p>');
+      } else {
+        h.push('<div class="chips">');
+        for (var d = 0; d < done.length; d++) {
+          var c = Course.byId(done[d]);
+          if (c) h.push('<button class="chip ok" data-go-lesson="' + c.id + '">✓ 《' + UI.esc(c.title) + '》</button>');
+        }
+        h.push('</div>');
+      }
+      h.push('</section>');
+
+      /* ---- 阶段复盘 ---- */
+      h.push(reviewBlock(done.length, st.coursesTotal));
+
+      /* ---- 成长记录时间线 ---- */
+      var j = Store.journal();
+      h.push('<section class="card"><div class="card-head"><span class="label">成长记录</span><span class="muted">共 ' + j.length + ' 条</span></div>');
+      if (!j.length) {
+        h.push('<p class="muted small">这里会按时间记录你的每一步成长。</p>');
+      } else {
+        h.push('<ul class="timeline">');
+        for (var k = j.length - 1; k >= 0; k--) {
+          var it = j[k];
+          h.push('<li><span class="tl-date">' + UI.friendlyDate(it.date) + '<em>' + UI.friendlyTime(it.ts) + '</em></span>' +
+            '<div class="tl-main"><b>' + UI.esc(it.note || journalLabel(it.type)) + '</b>' +
+            (it.meta && it.meta.courseId ?
+              '<button class="link small" data-go-lesson="' + it.meta.courseId + '">再看一遍 →</button>' : "") +
+            '</div></li>');
+        }
+        h.push('</ul>');
+      }
+      h.push('</section>');
+
+      h.push('<p class="muted small center" style="margin:14px 0 4px">数据只保存在这台设备的浏览器里。</p>');
+      return h.join("");
+    },
+    bind: function (v) {
+      var l = UI.$all("[data-go-lesson]", v);
+      for (var i = 0; i < l.length; i++) (function (b) {
+        b.addEventListener("click", function () {
+          var id = b.getAttribute("data-go-lesson");
+          Store.markStarted(id);
+          Router.navigate("lesson", { id: id });
+        });
+      })(l[i]);
+      var a = UI.$all("[data-assess]", v);
+      for (var j = 0; j < a.length; j++) a[j].addEventListener("click", function () {
+        Router.navigate("assess", { mode: "redo" });
+      });
+      var g = UI.$all("[data-go]", v);
+      for (var m = 0; m < g.length; m++) (function (b) {
+        b.addEventListener("click", function () { Router.navigate(b.getAttribute("data-go")); });
+      })(g[m]);
+    }
+  };
+
+  function dateStr(ts) { return UI.dateToStr(new Date(ts)); }
+  function statCell(k, v) {
+    return '<div class="stat"><b>' + UI.esc(v) + '</b><span>' + k + '</span></div>';
+  }
+  function reviewBlock(done, total) {
+    var h = ['<section class="card review">', '<div class="card-head"><span class="label">阶段复盘</span></div>'];
+    if (done === 0) h.push('<p>你还没有完成课程。从第一课《' + UI.esc(titleByOrder(1)) + '》开始，给自己 10 分钟就好。</p>');
+    else if (done < total) h.push('<p>你已经完成 ' + done + ' / ' + total + ' 节。你的下一节是《' + UI.esc(titleByOrder(done + 1)) + '》。记得：走完，比走快更重要。</p>');
+    else h.push('<p>第一阶段 ' + total + ' 节全部完成了。可以过几天回来复习一遍，也可以重新自评一次，看看自己有没有什么变化。</p>');
+    h.push('<div class="btnrow"><button class="btn ghost" data-assess="1">重新自评</button>');
+    if (done === 0) h.push('<button class="btn primary" data-go="home">去开始第一课</button>');
+    else h.push('<button class="btn primary" data-go="course">回到课程</button>');
+    h.push('</div></section>');
+    return h.join("");
+  }
+  function titleByOrder(o) {
+    for (var i = 0; i < COURSES.length; i++) if (COURSES[i].order === o) return COURSES[i].title;
+    return "";
+  }
+})();
+</script>
+  <script>
+/* =========================================================================
+ * 成长状态自评（整屏）：5 题 × 1–5 档 → 生成画像 → 进入首页 / 返回档案
+ * ========================================================================= */
+(function () {
+  "use strict";
+  window.Pages = window.Pages || {};
+
+  function legend() {
+    var w = ASSESS.scaleWords;
+    return '<div class="scale-legend"><span>' + w[0] + ' ' + 1 + '</span><span class="dim">1 —— 5</span><span>5 ' + w[4] + '</span></div>';
+  }
+
+  function formHtml() {
+    var h = [];
+    h.push('<div class="assess">');
+    h.push('<div class="assess-top"><span class="brand-mini">成长空间</span><h2>成长状态自评</h2></div>');
+    h.push('<p class="page-intro">' + UI.esc(ASSESS.intro) + '</p>');
+    h.push(legend());
+    var qs = ASSESS.questions;
+    for (var i = 0; i < qs.length; i++) {
+      var q = qs[i];
+      h.push('<section class="card aq" data-q="' + q.key + '">' +
+        '<p class="aq-no">' + (i + 1) + '</p>' +
+        '<p class="aq-text">' + UI.esc(q.text) + '</p>' +
+        '<div class="scale">');
+      for (var n = 1; n <= 5; n++) {
+        h.push('<button class="sc" data-v="' + n + '"><b>' + n + '</b><span>' + UI.esc(ASSESS.scaleWord(n)) + '</span></button>');
+      }
+      h.push('</div></section>');
+    }
+    h.push('<div class="action-bar"><button class="btn primary wide" id="assessGo" disabled>完成，看看我的成长画像</button></div>');
+    h.push('</div>');
+    return h.join("");
+  }
+
+  function resultHtml(pt, first) {
+    var h = [];
+    h.push('<div class="assess">');
+    h.push('<div class="assess-top"><h2>我的成长画像</h2><p class="muted small">这不是标签，也不是分数，只是此刻的一个起点。</p></div>');
+    h.push('<section class="card"><div class="card-head"><span class="label">当前状态</span></div><p class="state-text">' + UI.esc(pt.state) + '</p></section>');
+    h.push('<section class="card"><div class="card-head"><span class="label">值得关注的方向</span></div>');
+    for (var f = 0; f < pt.focus.length; f++) h.push('<p class="focus-item">· ' + UI.esc(pt.focus[f].text) + '</p>');
+    h.push('</section>');
+    h.push('<section class="card"><div class="card-head"><span class="label">推荐练习</span></div>');
+    h.push('<div class="chips">');
+    for (var c = 0; c < pt.recommendIds.length; c++) {
+      var cc = Course.byId(pt.recommendIds[c]);
+      if (cc) h.push('<button class="chip ok" data-go-lesson="' + cc.id + '">《' + UI.esc(cc.title) + '》</button>');
+    }
+    h.push('</div></section>');
+    h.push('<div class="btnrow">');
+    if (first) h.push('<button class="btn primary wide" data-go="home">开始今天的成长 →</button>');
+    else h.push('<button class="btn primary wide" data-go="archive">回到我的档案</button>');
+    h.push('</div>');
+    h.push('</div>');
+    return h.join("");
+  }
+
+  Pages.assess = {
+    hideTab: true,
+    hideBar: true,
+    title: "成长状态自评",
+    render: function () { return formHtml(); },
+    bind: function (v, params) {
+      var answers = {};
+      var cells = UI.$all(".aq", v);
+      for (var i = 0; i < cells.length; i++) (function (cell) {
+        var qk = cell.getAttribute("data-q");
+        var scs = UI.$all(".sc", cell);
+        for (var j = 0; j < scs.length; j++) (function (b) {
+          b.addEventListener("click", function () {
+            var n = b.getAttribute("data-v");
+            answers[qk] = n;
+            for (var k = 0; k < scs.length; k++) scs[k].classList.toggle("on", scs[k] === b);
+            UI.toast(ASSESS.scaleWord(Number(n)));
+            if (Object.keys(answers).length === ASSESS.questions.length) UI.$("#assessGo", v).disabled = false;
+          });
+        })(scs[j]);
+      })(cells[i]);
+
+      var go = UI.$("#assessGo", v);
+      if (go) go.addEventListener("click", function () {
+        go.disabled = true;
+        var prev = Store.getProfile();
+        var first = !prev;
+        var pt = ASSESS.buildPortrait(answers);
+        var profile = {
+          done: true,
+          answers: answers,
+          portrait: pt,
+          startedAt: prev ? prev.startedAt : Date.now(),
+          revisedAt: Date.now()
+        };
+        Store.saveProfile(profile);
+        Store.addJournal("assessment", first ? "完成首次成长状态自评" : "更新成长状态自评", {});
+        UI.$("#view").innerHTML = resultHtml(pt, first);
+        bindResult();
+      });
+    }
+  };
+
+  function bindResult() {
+    var v = UI.$("#view");
+    var r = UI.$all("[data-go-lesson]", v);
+    for (var i = 0; i < r.length; i++) (function (b) {
+      b.addEventListener("click", function () {
+        var id = b.getAttribute("data-go-lesson");
+        Store.markStarted(id);
+        Router.navigate("lesson", { id: id });
+      });
+    })(r[i]);
+    var g = UI.$all("[data-go]", v);
+    for (var j = 0; j < g.length; j++) (function (b) {
+      b.addEventListener("click", function () { Router.navigate(b.getAttribute("data-go")); });
+    })(g[j]);
+    window.scrollTo(0, 0);
+  }
+})();
+</script>
+  <!-- 启动 -->
+  <script>
+/* =========================================================================
+ * 成长空间 · 启动与装配
+ * 首次进入（无本地画像）→ 成长评估；已有画像 → 首页。
+ * ========================================================================= */
+(function () {
+  "use strict";
+
+  Router.init();
+
+  var prof = Store.getProfile();
+  if (prof && prof.done) {
+    Router.navigate("home");
+  } else {
+    Router.render("assess", {});   // 首次进入：整屏成长评估
+  }
+
+  /* 调试用：在浏览器控制台执行 devReset() 即可清空本机数据、重新走一遍 */
+  window.devReset = function () {
+    Store.resetAll();
+    location.reload();
+  };
+})();
+</script>
+</body>
+</html>
+
