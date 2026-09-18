@@ -45,7 +45,12 @@
 
     /* 头信息 */
     h.push('<div class="lesson-head">');
-    h.push('<div class="lh-meta"><span class="tag ok">中央区 · 自我认知与反应</span><span class="muted">预计 ' + c.minutes + ' 分钟</span></div>');
+    /* 区域名从数据里取，不再写死「中央区 · 自我认知与反应」——
+       一旦往别的门类加课，写死的那行会把所有课都标成中央区。 */
+    var region = (window.GData && GData.regionById) ? GData.regionById(c.regionId) : null;
+    var regionName = region ? region.name : "成长方向";
+    h.push('<div class="lh-meta"><span class="tag ok">' + UI.esc(regionName) + ' · 第 ' + UI.courseNo(c.order) +
+      ' 节</span><span class="muted">预计 ' + c.minutes + ' 分钟</span></div>');
     h.push('<h2>' + UI.esc(c.title) + '</h2>');
     h.push('<p class="sub">' + UI.esc(c.summary) + '</p>');
     if (done && s.stage < 3) h.push('<div class="ribbon">已完成 ✓ · 可以复习，或再做一次练习/反思</div>');
@@ -91,7 +96,7 @@
       h.push('<div class="btnrow">');
       h.push('<button class="btn primary" id="goHome">回首页</button>');
       if (next) h.push('<button class="btn ghost" id="goNext">下一节</button>');
-      h.push('<button class="btn ghost" id="goArchive">我的档案</button>');
+      h.push('<button class="btn ghost" id="goTrace">成长轨迹</button>');
       h.push('</div></section>');
     }
 
@@ -149,15 +154,15 @@
       var nx = Course.nextAfter(cur.id);
       if (nx) Router.render("lesson", { id: nx.id });
     });
-    var arch = UI.$("#goArchive", UI.$("#view"));
-    if (arch) arch.addEventListener("click", function () { Router.navigate("archive"); });
+    var tr = UI.$("#goTrace", UI.$("#view"));
+    if (tr) tr.addEventListener("click", function () { Router.navigate("trace"); });
   }
 
   Pages.lesson = {
     hideTab: true,
     title: function (p) {
       var c = Course.byId(p.id);
-      return c ? "第 " + c.order + " 节" : "课程";
+      return c ? "第 " + UI.courseNo(c.order) + " 节" : "课程";
     },
     render: function (p) {
       var c = Course.byId(p.id) || COURSES[0];

@@ -3,50 +3,99 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <meta name="description" content="成长空间：一个温和的个人成长小工具。自我观察、情绪、沟通与习惯，每天 10 分钟。">
+  <meta name="description" content="成长空间：一个可以慢慢看见自己变化的地方。记录、观察、看见变化。">
   <title>成长空间</title>
-  <link rel="stylesheet" href="css/style.css">
+
+  <!-- iOS「添加到主屏幕」后按全屏 App 打开，而不是塞进 Safari 的浏览器外壳 -->
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="成长空间">
+
+  <!-- 主屏图标。没有它，iOS 会拿一张页面截图当图标。
+       图形由 tools/icon.js 算出来（不引素材文件），改配色跑一次即可。
+       iOS 只认 PNG，不认 SVG，所以这里是 PNG。 -->
+  <link rel="icon" href="icon-180.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="icon-180.png">
+
+  <link rel="stylesheet" href="css/style.css?v=7">
 </head>
 <body>
 
-  <!-- 顶栏 -->
-  <header id="topbar">
-    <button id="btnBack" class="iconbtn back" aria-label="返回" hidden>‹</button>
-    <div id="pageTitle">成长空间</div>
-  </header>
+<!-- 示例模式横幅。平时 hidden，进示例模式时由 app.js 打开。
+     放在 #app 外面：它是 fixed 定位，留在里面会变成栅格的一个格子 -->
+<div id="demoBar" hidden>
+  <span class="db-text">示例模式 · 这些不是你写的内容</span>
+  <button id="demoExit" type="button">开始写我自己的</button>
+</div>
 
-  <!-- 页面内容 -->
-  <main id="view"></main>
+<div id="app">
 
-  <!-- 底部导航 -->
-  <nav id="tabbar">
-    <button class="tab" data-nav="home">首页</button>
-    <button class="tab" data-nav="route">路线</button>
-    <button class="tab" data-nav="course">课程</button>
-    <button class="tab" data-nav="practice">练习</button>
-    <button class="tab" data-nav="archive">我的</button>
-  </nav>
+  <!-- 桌面端侧边栏（< 900px 隐藏） -->
+  <aside id="rail">
+    <div class="rail-logo">
+      <span class="rl-mark" aria-hidden="true">
+        <svg viewBox="0 0 32 32" width="30" height="30" fill="none" stroke="currentColor"
+             stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="16" cy="16" r="11.2"/>
+          <path d="M16 21.6v-5.4"/>
+          <path d="M16 16.2c0-2.6-2-4.6-4.6-4.6 0 2.6 2 4.6 4.6 4.6z"/>
+          <path d="M16 16.2c0-2.6 2-4.6 4.6-4.6 0 2.6-2 4.6-4.6 4.6z"/>
+        </svg>
+      </span>
+      <span class="rl-text">成长空间<em>Grow at your own pace</em></span>
+    </div>
 
-  <!-- 轻提示 -->
-  <div id="toast" role="status"></div>
+    <nav id="railNav" class="rail-nav" aria-label="主导航"></nav>
 
-  <!-- 核心层 -->
-  <script src="js/core/ui.js"></script>
-  <script src="js/core/store.js"></script>
-  <script src="js/core/router.js"></script>
-  <!-- 数据层 -->
-  <script src="js/data/regions.js"></script>
-  <script src="js/data/assessment.js"></script>
-  <script src="js/data/courses.js"></script>
-  <!-- 页面层 -->
-  <script src="js/pages/home.js"></script>
-  <script src="js/pages/route.js"></script>
-  <script src="js/pages/course.js"></script>
-  <script src="js/pages/practice.js"></script>
-  <script src="js/pages/lesson.js"></script>
-  <script src="js/pages/archive.js"></script>
-  <script src="js/pages/assess.js"></script>
-  <!-- 启动 -->
-  <script src="app.js"></script>
+    <p class="rail-quote">不是变成更好的人，<br>而是成为更真实的自己。</p>
+  </aside>
+
+  <!-- 主列 -->
+  <div id="colmain">
+    <header id="topbar">
+      <button id="btnBack" class="iconbtn back" aria-label="返回" hidden>‹<span class="bb-label">返回</span></button>
+      <div id="pageTitle">成长空间</div>
+    </header>
+    <main id="view"></main>
+  </div>
+
+  <!-- 宽屏右栏（容器在外壳，内容由页面通过 rail 钩子填） -->
+  <aside id="rail2"></aside>
+
+</div>
+
+<!-- 手机端底部导航（≥ 900px 隐藏）。按钮由 Router.init() 生成，不在这里手写 -->
+<nav id="tabbar" aria-label="主导航"></nav>
+
+<div id="toast" role="status"></div>
+
+<!-- 核心层 -->
+<script src="js/core/ui.js?v=7"></script>
+<script src="js/core/icons.js?v=7"></script>
+<script src="js/core/store.js?v=7"></script>
+<script src="js/core/router.js?v=7"></script>
+<script src="js/core/widgets.js?v=7"></script>
+<!-- 数据层 -->
+<script src="js/data/regions.js?v=7"></script>
+<script src="js/data/courses.js?v=7"></script>
+<script src="js/data/questionnaire.js?v=7"></script>
+<script src="js/data/record.js?v=7"></script>
+<script src="js/data/topics.js?v=7"></script>
+<script src="js/data/demo.js?v=7"></script>
+<!-- 页面层 -->
+<script src="js/pages/home.js?v=7"></script>
+<script src="js/pages/trace.js?v=7"></script>
+<script src="js/pages/notes.js?v=7"></script>
+<script src="js/pages/explore.js?v=7"></script>
+<script src="js/pages/me.js?v=7"></script>
+<script src="js/pages/questionnaire.js?v=7"></script>
+<script src="js/pages/record.js?v=7"></script>
+<script src="js/pages/topic.js?v=7"></script>
+<script src="js/pages/nickname.js?v=7"></script>
+<script src="js/pages/lesson.js?v=7"></script>
+<script src="js/pages/zone.js?v=7"></script>
+<!-- 启动 -->
+<script src="app.js?v=7"></script>
 </body>
 </html>

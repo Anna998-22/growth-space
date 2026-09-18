@@ -1,23 +1,79 @@
 /* =========================================================================
    成长空间 · 样式
    温和、简洁、有一点治愈感；成人向生活方式工具；移动端优先。
+
+   两条纪律，改动前请先读：
+   1. :root 里的变量【名】只增不改 —— 全文件的颜色只从变量取，没有第二处 hex。
+      改色板只动 :root 一段，页面样式自动跟随。
+   2. 基础态写死手机形态；900px 加左栏，1180px 加右栏。桌面端坚持 body 滚动，
+      不做内部滚动容器 —— router.js / lesson.js 靠 window.scrollTo(0,0) 复位，
+      主区一旦变成 overflow:auto，切页会静默保留上一页滚动位置。
    ========================================================================= */
 
 :root{
-  --bg:#f5f2ec;
+  /* —— 表层 —— */
+  --bg:#f7f5f1;
+  --bg-2:#f1eee8;
   --card:#ffffff;
-  --ink:#2b2925;
-  --ink-2:#4a463f;
-  --muted:#9b948a;
-  --line:#eae3d5;
-  --brand:#5f8b77;
-  --brand-ink:#3d6551;
-  --brand-soft:#e9f1ec;
-  --warm:#cf9b74;
-  --warm-soft:#f8ece1;
+  --glow:#eae5da;            /* ≥600px 时 body 上那层极淡的氛围光 */
+
+  /* —— 文字 —— */
+  --ink:#2f2c28;
+  --ink-2:#56514a;
+  --muted:#7d766c;           /* 已调到对白底 ≈4.5:1 */
+  --faint:#a49c8f;           /* 纯装饰用，不承载信息 */
+  --faint-2:#c6bfb2;
+
+  /* —— 线 —— */
+  --line:#e9e4db;
+  --line-2:#f0ece5;
+  --track:#eae4d9;           /* 进度条底槽 */
+
+  /* —— 主色：雾绿 —— */
+  --brand:#7d9c92;           /* 只做填充（点、线、条），不做文字底色 */
+  --brand-2:#a8c0b5;         /* 渐变的另一端 */
+  --brand-ink:#45655c;       /* 文字 / 主按钮底：对白 6.4:1 */
+  --brand-soft:#eaf1ee;
+  --brand-soft-2:#f2f8f5;
+  --brand-line:#cfded7;
+  --on-brand:#ffffff;
+
+  /* —— 辅色：雾蓝 —— */
+  --mist:#8fa6b8;
+  --mist-ink:#4e6b7c;
+  --mist-soft:#ecf1f5;
+
+  /* —— 点缀：米杏 / 暖橙（少量） —— */
+  --warm:#c99a6e;
+  --warm-ink:#8f5a2e;
+  --warm-soft:#f9efe4;
+  --warm-line:#f0ddc9;
+
+  /* —— 中性标签 / 已完成态 —— */
+  --tint:#f0ece4;
+  --tint-ink:#7b7467;
+  --tint-2:#f3f1ec;
+  --tint-2-ink:#9c958a;
+  --done-bg:#fafaf7;
+  --done-line:#e3dfd3;
+  --done-tint:#eef0e6;
+  --done-ink:#a6a194;
+  --step-bg:#efe9dc;
+  --step-ink:#9f988b;
+  --field:#fbfaf6;
+
+  /* —— 正文（比 --ink 略软，长文阅读用） —— */
+  --reading:#33312c;
+  --reading-2:#3b3832;
+
+  /* —— 尺寸 —— */
   --radius:18px;
-  --shadow:0 10px 26px rgba(80,70,55,.06);
-  --maxw:560px;
+  --radius-sm:13px;
+  --shadow:0 8px 24px rgba(70,62,50,.055);
+  --shadow-lift:0 12px 30px rgba(70,62,50,.09);
+  --maxw:640px;
+  --rail-w:236px;
+  --rail2-w:300px;
   --font:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans SC",sans-serif;
 }
 
@@ -30,13 +86,58 @@ body{
   color:var(--ink);
   line-height:1.7;
   min-height:100vh;
+  /* iOS 的 100vh 量的是「地址栏收起时」的高度，比看得见的区域高 ——
+     用它当最小高度，页面底部会多出一截空白。dvh 才是跟着视口变的那一个。
+     先写 vh 再写 dvh：不认识 dvh 的浏览器保留上面那行，不会两边都落空。 */
+  min-height:100dvh;
 }
 button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
 input,textarea{font-family:inherit;color:var(--ink)}
 
+/* 手指点按的两个细节：
+   touch-action:manipulation 去掉移动端「等 300ms 看是不是双击」的延迟，
+   点了就有反应；再配一条 :active 反馈，否则手机上完全不知道自己点中没有。
+   （-webkit-tap-highlight-color 已经在上面全局关掉了，那是系统默认的高亮块，
+     又丑又不受控，所以这里用 transform 自己给一个更轻的。） */
+button,.topic-card,.lesson-row,.q-opt,.tab{
+  touch-action:manipulation;
+}
+@media (hover:none){
+  button:active,.topic-card:active,.lesson-row:active,.q-opt:active,.tab:active{
+    opacity:.72;
+  }
+}
+
 .hidden{display:none !important}
 
-/* 页面容器：窄列居中，桌面两侧留气氛 */
+/* 键盘可达性：鼠标点击不留框，键盘 Tab 才显示 */
+:focus{outline:none}
+:focus-visible{outline:2px solid var(--brand);outline-offset:2px;border-radius:6px}
+
+/* =========================================================================
+   外壳：手机是单列流式；≥900px 起左栏；≥1180px 起右栏。
+   #rail / #rail2 在基础态直接 display:none，不占位。
+   ========================================================================= */
+#app{display:block}
+#rail,#rail2{display:none}
+
+#rail .rail-logo{
+  display:flex;align-items:center;gap:10px;
+  padding:0 12px 22px;color:var(--brand-ink);
+}
+#rail .rl-mark{display:flex;color:var(--brand);flex:none}
+#rail .rl-text{font-size:16px;font-weight:700;letter-spacing:.06em;line-height:1.25}
+#rail .rl-text em{
+  display:block;font-style:normal;font-size:10px;font-weight:400;
+  letter-spacing:.14em;color:var(--faint);margin-top:3px;
+}
+#rail .rail-quote{
+  margin:auto 12px 0;padding-top:22px;
+  font-size:12px;line-height:1.9;color:var(--faint);
+  border-top:1px solid var(--line);
+}
+
+/* 页面容器 */
 main#view{
   max-width:var(--maxw);
   margin:0 auto;
@@ -49,6 +150,7 @@ body.no-tab main#view{padding-bottom:36px}
   position:sticky;top:0;z-index:30;
   display:flex;align-items:center;justify-content:center;
   height:52px;
+  background:var(--bg);                                   /* color-mix 不支持时的回退 */
   background:color-mix(in srgb, var(--bg) 82%, transparent);
   backdrop-filter:blur(8px);
   -webkit-backdrop-filter:blur(8px);
@@ -58,14 +160,24 @@ body.no-tab main#view{padding-bottom:36px}
 #btnBack{
   position:absolute;left:10px;top:50%;transform:translateY(-50%);
   width:40px;height:40px;font-size:26px;line-height:1;color:var(--ink-2);
+  display:flex;align-items:center;justify-content:center;
 }
+#btnBack .bb-label{display:none;font-size:13px;font-weight:500;letter-spacing:.02em}
 body.no-bar #topbar{display:none}
 
-/* ---------- 底部导航 ---------- */
+/* ---------- 主导航（两个容器共用 .tab 规则，数据源只有 router.js 的 TABS 一处） ---------- */
+.tab{
+  display:flex;align-items:center;justify-content:center;
+  color:var(--muted);letter-spacing:.03em;
+  transition:color .15s ease, background .15s ease;
+}
+.tab .ic{flex:none}
+
 #tabbar{
   position:fixed;left:0;right:0;bottom:0;z-index:40;
   max-width:var(--maxw);margin:0 auto;
   display:flex;
+  background:var(--card);                                 /* color-mix 回退 */
   background:color-mix(in srgb, var(--card) 92%, transparent);
   backdrop-filter:blur(10px);
   -webkit-backdrop-filter:blur(10px);
@@ -74,22 +186,54 @@ body.no-bar #topbar{display:none}
 }
 #tabbar.hidden{display:none}
 #tabbar .tab{
-  flex:1;height:60px;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;
-  font-size:12px;color:var(--muted);letter-spacing:.03em;
-  position:relative;
-}
-#tabbar .tab::before{
-  content:"";width:4px;height:4px;border-radius:50%;
-  background:transparent;margin-bottom:2px;
+  flex:1;height:60px;flex-direction:column;gap:3px;
+  font-size:11.5px;position:relative;
 }
 #tabbar .tab.on{color:var(--brand-ink);font-weight:600}
-#tabbar .tab.on::before{background:var(--brand)}
+#tabbar .tab.on::before{
+  content:"";position:absolute;top:0;left:50%;transform:translateX(-50%);
+  width:22px;height:2px;border-radius:0 0 3px 3px;background:var(--brand);
+}
+
+/* ---------- 示例模式横幅 ----------
+   固定在顶部，所以它会盖住所有 top:0 的 sticky 元素。
+   --demoh 是「横幅有多高」，body 用它顶开内容，下面几条用它把
+   顶栏 / 左栏 / 右栏的 sticky 起点一起推下来 —— 少推一个，
+   那个元素就会永远藏在横幅底下。 */
+body.demo-on{
+  --demoh:calc(46px + env(safe-area-inset-top));
+  padding-top:var(--demoh);
+}
+body.demo-on #topbar{top:var(--demoh)}
+
+#demoBar{
+  position:fixed;left:0;right:0;top:0;z-index:70;
+  min-height:46px;
+  display:flex;align-items:center;justify-content:center;gap:12px;
+  padding:0 14px;
+  padding-top:env(safe-area-inset-top);   /* 刘海机：别让文字躲进状态栏 */
+  background:var(--ink);
+  color:var(--on-brand);
+  font-size:12.5px;
+  line-height:1.4;
+}
+/* 必须显式写这一条。上面给了 display:flex，作者样式盖过浏览器默认的
+   [hidden]{display:none} —— 于是 hidden 属性虽然还在，横幅却照样占着
+   46px 显示在每一页上。顶栏和底栏也一样，各有各的 .hidden 规则。 */
+#demoBar[hidden]{display:none}
+#demoExit{
+  flex:none;
+  padding:6px 12px;border-radius:99px;
+  font-size:12px;font-weight:600;
+  background:var(--on-brand);color:var(--ink);
+  touch-action:manipulation;
+}
+.db-text{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
 /* ---------- 轻提示 ---------- */
 #toast{
   position:fixed;left:50%;bottom:88px;transform:translateX(-50%) translateY(8px);
-  z-index:60;background:rgba(43,41,37,.88);color:#fff;
+  z-index:60;background:rgba(47,44,40,.9);color:var(--on-brand);
   font-size:13px;padding:9px 16px;border-radius:999px;
   opacity:0;pointer-events:none;transition:.22s ease;white-space:nowrap;
 }
@@ -100,8 +244,9 @@ body.no-tab #toast{bottom:40px}
 .muted{color:var(--muted)}
 .small{font-size:12px}
 .center{text-align:center}
+.ic{display:block;flex:none}
 .label{
-  font-size:12px;letter-spacing:.14em;color:var(--muted);
+  font-size:11.5px;letter-spacing:.16em;color:var(--muted);
   text-transform:uppercase;
 }
 .card{
@@ -114,26 +259,35 @@ body.no-tab #toast{bottom:40px}
   display:flex;align-items:baseline;justify-content:space-between;
   margin-bottom:6px;gap:10px;
 }
-.card h3{margin:2px 0 6px;font-size:18px;line-height:1.5}
+.card h3{margin:2px 0 6px;font-size:17px;line-height:1.5;letter-spacing:.01em}
 .card .sub,.card p{margin:4px 0}
 .meta{font-size:13px;margin:2px 0}
 .tag{
   display:inline-block;font-size:11px;padding:2px 9px;border-radius:999px;
-  background:#f0ece4;color:#8a8376;white-space:nowrap;
+  background:var(--tint);color:var(--tint-ink);white-space:nowrap;
 }
 .tag.live,.tag.ok{background:var(--brand-soft);color:var(--brand-ink)}
-.tag.soon{background:#f1eee7;color:#a49c8f}
+.tag.soon{background:var(--tint-2);color:var(--tint-2-ink)}
 .page-intro{color:var(--ink-2);font-size:14px;margin:6px 2px 14px}
+
+/* 区块标题（首页/记录/探索各块共用） */
+.sec-head{
+  display:flex;align-items:baseline;justify-content:space-between;
+  gap:10px;margin:22px 2px 10px;
+}
+.sec-head h2{margin:0;font-size:16px;font-weight:600;letter-spacing:.01em}
+.sec-head .link{padding:0}
+.sec-note{font-size:12.5px;color:var(--muted);margin:-4px 2px 10px}
 
 /* 按钮 */
 .btn{
-  display:inline-flex;align-items:center;justify-content:center;
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;
   min-height:46px;padding:0 20px;border-radius:999px;
   font-size:15px;font-weight:600;letter-spacing:.02em;
   transition:transform .08s ease, opacity .15s;
 }
 .btn:active{transform:scale(.98)}
-.btn.primary{background:var(--brand);color:#fff}
+.btn.primary{background:var(--brand-ink);color:var(--on-brand)}
 .btn.ghost{background:var(--card);color:var(--brand-ink);border:1px solid var(--line)}
 .btn.wide{width:100%}
 .btn[disabled]{opacity:.45;pointer-events:none}
@@ -147,8 +301,8 @@ body.no-tab #toast{bottom:40px}
 .link.small{font-size:12px;color:var(--muted)}
 
 /* 进度条与统计 */
-.bar{height:8px;border-radius:999px;background:#eee7da;overflow:hidden;margin:8px 0 4px}
-.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--brand),#83a68f);border-radius:999px;transition:width .4s ease}
+.bar{height:8px;border-radius:999px;background:var(--track);overflow:hidden;margin:8px 0 4px}
+.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--brand),var(--brand-2));border-radius:999px;transition:width .4s ease}
 .bar.mini{margin:10px 0 2px}
 .statrow{display:flex;gap:6px;margin-top:12px}
 .stat{flex:1;text-align:center}
@@ -157,26 +311,90 @@ body.no-tab #toast{bottom:40px}
 
 /* ---------- 首页 ---------- */
 .hero{
-  background:linear-gradient(160deg,var(--brand-soft),#f3ead9);
+  background:linear-gradient(160deg,var(--brand-soft),var(--bg-2));
   border-radius:22px;padding:20px 20px 22px;margin-bottom:16px;
 }
 .hero-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
 .brand-mini{font-size:12px;letter-spacing:.28em;color:var(--brand-ink);font-weight:600}
 .streak-chip{
-  font-size:12px;color:var(--brand-ink);background:rgba(255,255,255,.65);
+  font-size:12px;color:var(--brand-ink);
+  background:rgba(255,255,255,.65);
   padding:4px 11px;border-radius:999px;
 }
 .greet{font-size:13px;color:var(--brand-ink);margin:0 0 2px}
-.hero-q{font-size:27px;line-height:1.35;margin:0;font-weight:700;letter-spacing:.01em}
+.hero-q{font-size:26px;line-height:1.35;margin:0;font-weight:700;letter-spacing:.01em}
 .today-card h3{font-size:19px}
 .today-card .btn{margin-top:14px}
 .today-note{font-size:13px;color:var(--muted);text-align:center;margin:4px 0 6px}
 .done-card .big{font-size:15px;color:var(--brand-ink);background:var(--brand-soft);display:inline-block;padding:8px 14px;border-radius:999px;margin-bottom:8px;font-weight:700;letter-spacing:.1em}
 .card .pt{font-weight:600;color:var(--ink-2)}
 
+/* 首页问候头（参考图里：左问候，右日期） */
+.home-head{
+  display:flex;align-items:flex-start;justify-content:space-between;
+  gap:14px;margin:4px 2px 18px;
+}
+.home-head h1{margin:0;font-size:21px;line-height:1.4;letter-spacing:.01em}
+.home-head .sub{font-size:13px;color:var(--muted);margin:5px 0 0}
+.home-date{
+  flex:none;text-align:right;font-size:11.5px;color:var(--muted);
+  line-height:1.6;letter-spacing:.03em;padding-top:3px;
+}
+.home-date b{display:block;font-size:12.5px;font-weight:600;color:var(--ink-2)}
+
+/* 探索入口（首页「最近的你，还好吗？」） */
+.invite{
+  position:relative;overflow:hidden;
+  background:linear-gradient(150deg,var(--brand-soft) 0%,var(--mist-soft) 58%,var(--warm-soft) 130%);
+  border:1px solid var(--brand-line);
+  border-radius:22px;padding:22px 20px 20px;margin:0 0 16px;
+}
+.invite .inv-kicker{
+  font-size:11px;letter-spacing:.2em;color:var(--brand-ink);
+  font-weight:600;margin:0 0 8px;
+}
+.invite h2{margin:0;font-size:22px;line-height:1.4;letter-spacing:.01em}
+.invite .inv-sub{font-size:13.5px;color:var(--ink-2);margin:9px 0 0;line-height:1.75}
+.invite .inv-note{font-size:12px;color:var(--muted);margin:10px 0 0;line-height:1.7}
+.invite .inv-meta{
+  display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+  font-size:11.5px;color:var(--muted);margin:0 0 14px;letter-spacing:.03em;
+}
+.invite .btn{margin-top:16px}
+.invite.done{background:linear-gradient(150deg,var(--brand-soft),var(--card))}
+/* 角上那抹水彩：纯 CSS 径向渐变，不引外部图片 */
+.invite .inv-art{
+  position:absolute;right:-46px;top:-46px;width:190px;height:190px;
+  border-radius:50%;pointer-events:none;
+  background:radial-gradient(circle at 38% 38%,
+    rgba(143,166,184,.30), rgba(143,166,184,.10) 58%, transparent 72%);
+}
+.invite .inv-art::after{
+  content:"";position:absolute;left:26px;top:52px;width:110px;height:110px;
+  border-radius:50%;
+  background:radial-gradient(circle at 45% 45%,
+    rgba(201,154,110,.24), rgba(201,154,110,.07) 60%, transparent 74%);
+}
+.invite-inner{position:relative}
+
+/* ---------- 探索主题入口 ---------- */
+.topic-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.topic-card{
+  display:block;width:100%;text-align:left;
+  background:var(--card);border:1px solid var(--line);
+  border-radius:var(--radius-sm);padding:14px 14px 13px;
+  transition:transform .1s ease, box-shadow .18s ease, border-color .18s ease;
+}
+.topic-card:active{transform:scale(.985)}
+.topic-card .tc-ic{color:var(--brand);margin-bottom:9px}
+.topic-card b{display:block;font-size:14.5px;line-height:1.45;font-weight:600}
+.topic-card .tc-sub{display:block;font-size:12px;color:var(--muted);margin-top:3px;line-height:1.6}
+.topic-card.seen{border-color:var(--brand-line);background:var(--brand-soft-2)}
+.topic-card.seen .tc-ic{color:var(--brand-ink)}
+
 /* ---------- 9 区地图 ---------- */
 .zonemap{
-  display:grid;grid-template-columns:repeat(3,1fr);grid-auto-rows:minmax(84px,auto);
+  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-auto-rows:minmax(84px,auto);
   gap:9px;
 }
 .zone-cell{
@@ -186,13 +404,13 @@ body.no-tab #toast{bottom:40px}
   text-decoration:none;min-height:84px;
 }
 .zone-cell.live{
-  background:linear-gradient(160deg,#eef4ef,var(--card));
-  border-color:#c9dcd2;
+  background:linear-gradient(160deg,var(--brand-soft-2),var(--card));
+  border-color:var(--brand-line);
 }
-.zc-name{font-size:13px;font-weight:600;line-height:1.35}
+.zc-name{font-size:12.5px;font-weight:600;line-height:1.35}
 .zc-count{font-size:11px;color:var(--brand-ink);margin-top:2px;font-weight:600}
-.zc-status{font-size:10px;color:#b3aca0;margin-top:2px;letter-spacing:.05em}
-.zc-status.ok{color:var(--brand)}
+.zc-status{font-size:10px;color:var(--faint);margin-top:2px;letter-spacing:.05em}
+.zc-status.ok{color:var(--brand-ink)}
 
 /* 区域详情 */
 .zone-head{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
@@ -206,18 +424,19 @@ body.no-tab #toast{bottom:40px}
 }
 .mod .dot{width:8px;height:8px;border-radius:50%;background:var(--brand);flex:none}
 .mod.soon{color:var(--muted)}
-.mod.soon .dot{background:#d8d1c3}
-.soon-tag{margin-left:auto;font-size:11px;color:#b3aca0;white-space:nowrap}
+.mod.soon .dot{background:var(--faint-2)}
+.soon-tag{margin-left:auto;font-size:11px;color:var(--faint);white-space:nowrap}
 .lessons .label{margin-top:6px}
-.coming-card{background:var(--warm-soft);border-radius:var(--radius);padding:16px 18px;border:1px solid #f0ddc9}
+.coming-card{background:var(--warm-soft);border-radius:var(--radius);padding:16px 18px;border:1px solid var(--warm-line)}
 
 /* 课程行 */
 .lesson-row{
-  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  display:flex;align-items:center;gap:11px;
   background:var(--card);border:1px solid var(--line);
-  border-radius:15px;padding:13px 14px;margin-bottom:9px;
+  border-radius:15px;padding:12px 13px;margin-bottom:9px;
+  transition:border-color .18s ease, box-shadow .18s ease;
 }
-.lesson-row.done{background:#fafaf7;border-color:#e3dfd3}
+.lesson-row.done{background:var(--done-bg);border-color:var(--done-line)}
 .lesson-row.done .lr-text b{color:var(--muted)}
 .lesson-row .lr-main{display:flex;align-items:center;gap:12px;min-width:0}
 .lr-no{
@@ -225,11 +444,17 @@ body.no-tab #toast{bottom:40px}
   display:flex;align-items:center;justify-content:center;
   font-size:13px;font-weight:700;color:var(--brand-ink);background:var(--brand-soft);
 }
-.lesson-row.done .lr-no{background:#eef0e6;color:#a6a194}
-.lr-text{min-width:0}
-.lr-text b{display:block;font-size:15px;line-height:1.4}
+.lesson-row.done .lr-no{background:var(--done-tint);color:var(--done-ink)}
+.lr-text{min-width:0;flex:1}
+.lr-text b{display:block;font-size:14.5px;line-height:1.4;font-weight:600}
 .lr-text .small{display:block;margin-top:2px}
-.lr-cta{flex:none;font-size:12px;color:var(--brand-ink);font-weight:600}
+.lr-cta{flex:none;font-size:12px;color:var(--brand-ink);font-weight:600;display:flex;align-items:center;gap:2px}
+.lr-fav{
+  flex:none;width:34px;height:34px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  color:var(--faint-2);transition:color .15s ease, background .15s ease;
+}
+.lr-fav.on{color:var(--warm)}
 
 /* ---------- 学习页 ---------- */
 .lesson-head{padding:6px 2px 8px}
@@ -240,23 +465,23 @@ body.no-tab #toast{bottom:40px}
   background:var(--brand-soft);border-radius:999px;padding:6px 12px;display:inline-block;
 }
 .stepper{display:flex;gap:8px;margin:16px 0 6px}
-.stepper .step{display:flex;align-items:center;gap:6px;font-size:12px;color:#b3aca0}
+.stepper .step{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--faint)}
 .stepper .step i{
-  width:20px;height:20px;border-radius:50%;background:#efe9dc;color:#9f988b;
+  width:20px;height:20px;border-radius:50%;background:var(--step-bg);color:var(--step-ink);
   font-style:normal;display:flex;align-items:center;justify-content:center;font-size:11px;
 }
 .stepper .step.on{color:var(--brand-ink)}
-.stepper .step.on i,.stepper .step.cur i{background:var(--brand);color:#fff}
+.stepper .step.on i,.stepper .step.cur i{background:var(--brand-ink);color:var(--on-brand)}
 .stepper .step.cur{color:var(--brand-ink);font-weight:600}
 
-.reading{font-size:16px;line-height:1.9;color:#33312c}
+.reading{font-size:16px;line-height:1.9;color:var(--reading)}
 .body-h{margin:20px 0 4px;font-size:17px;color:var(--ink);letter-spacing:.01em}
-.body-p{margin:6px 0;color:#3b3832}
+.body-p{margin:6px 0;color:var(--reading-2)}
 .case{
-  background:var(--warm-soft);border:1px solid #f0ddc9;border-left:4px solid var(--warm);
+  background:var(--warm-soft);border:1px solid var(--warm-line);border-left:4px solid var(--warm);
   border-radius:12px;padding:12px 15px;margin:16px 0;
 }
-.case-tag{display:block;font-size:11px;color:var(--warm);letter-spacing:.12em;margin-bottom:6px;font-weight:600}
+.case-tag{display:block;font-size:11px;color:var(--warm-ink);letter-spacing:.12em;margin-bottom:6px;font-weight:600}
 .action-bar{margin-top:22px}
 .card.finish .tip{margin-top:10px;background:var(--brand-soft);border-radius:12px;padding:11px 13px;font-size:13.5px;color:var(--ink-2)}
 
@@ -268,11 +493,11 @@ body.no-tab #toast{bottom:40px}
 .field .q{font-size:15px;font-weight:600;color:var(--ink)}
 .field .hint{display:block;font-size:12px;color:var(--muted);font-weight:400;margin-top:2px}
 textarea{
-  width:100%;border:1px solid var(--line);background:#fbfaf6;
+  width:100%;border:1px solid var(--line);background:var(--field);
   border-radius:12px;padding:11px 12px;font-size:14.5px;line-height:1.7;
   resize:vertical;min-height:56px;outline:none;
 }
-textarea:focus{border-color:#c4d6cb;background:#fff}
+textarea:focus{border-color:var(--brand-line);background:var(--card)}
 
 /* ---------- 画像 / 状态 ---------- */
 .state-text{font-size:15px;line-height:1.85;color:var(--ink-2);margin-top:4px}
@@ -281,29 +506,305 @@ textarea:focus{border-color:#c4d6cb;background:#fff}
 .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
 .chip{
   font-size:12.5px;color:var(--brand-ink);background:var(--brand-soft);
-  border:1px solid #d6e3da;padding:7px 12px;border-radius:999px;line-height:1.3;
+  border:1px solid var(--brand-line);padding:7px 12px;border-radius:999px;line-height:1.3;
   text-align:left;max-width:100%;
 }
 .chip.ok{background:var(--brand-soft)}
 .smallmt{margin-top:14px}
-.statgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-bottom:14px}
+.statgrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;margin-bottom:14px}
 .statgrid .stat{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:12px 4px}
 .statgrid .stat b{font-size:19px}
 
-/* 时间线 */
+/* 旧时间线（archive.js 退役后由 .tl 取代，保留以免旧引用裸奔） */
 .timeline{list-style:none;margin:6px 0 0;padding:0}
 .timeline li{
   display:flex;gap:12px;padding:10px 0;border-bottom:1px dashed var(--line);
 }
 .timeline li:last-child{border-bottom:none}
 .tl-date{flex:none;width:52px;font-size:11px;color:var(--muted);line-height:1.4;text-align:right}
-.tl-date em{display:block;font-style:normal;color:#c6bfb2}
+.tl-date em{display:block;font-style:normal;color:var(--faint-2)}
 .tl-main{min-width:0;font-size:13.5px}
 .tl-main b{font-weight:600;font-size:13.5px;color:var(--ink-2)}
 .tl-main .note{margin:2px 0 0;font-size:13px;color:var(--ink-2);white-space:pre-wrap}
 .review p{color:var(--ink-2)}
 
-/* ---------- 成长评估 ---------- */
+/* =========================================================================
+   成长轨迹时间轴（Widgets.timeline）
+   同一份数据、两种排布：.tl-v 纵向（页面/手机），.tl-h 横向（首页宽屏）。
+   横向必须自带 .tl-scroll 滚动容器，否则会把桌面栅格撑爆。
+   ========================================================================= */
+.tl{list-style:none;margin:0;padding:0}
+.tl-item{position:relative}
+.tl-dot{
+  position:absolute;width:11px;height:11px;border-radius:50%;
+  background:var(--card);border:2px solid var(--brand-line);
+}
+.tl-item.k-assessment .tl-dot{background:var(--brand);border-color:var(--brand)}
+.tl-item.k-course .tl-dot{border-color:var(--brand)}
+.tl-item.k-mood .tl-dot{background:var(--warm);border-color:var(--warm)}
+.tl-item.k-note .tl-dot{background:var(--mist);border-color:var(--mist)}
+.tl-date{display:block;font-size:11px;color:var(--muted);letter-spacing:.04em}
+.tl-title{display:block;font-size:14.5px;font-weight:600;line-height:1.5;margin-top:1px}
+.tl-quote{font-size:13px;color:var(--ink-2);margin:4px 0 0;line-height:1.7}
+
+/* 纵向 */
+.tl-v .tl-item{display:block;padding:0 0 20px 26px;min-height:46px}
+.tl-v .tl-dot{left:0;top:5px}
+.tl-v .tl-item::before{
+  content:"";position:absolute;left:5px;top:19px;bottom:-2px;
+  width:1px;background:var(--line);
+}
+.tl-v .tl-item:last-child{padding-bottom:2px}
+.tl-v .tl-item:last-child::before{display:none}
+
+/* 「横向」（.tl-h）：手机上就是纵向，≥900px 才真的横过来。
+   要求「手机端成长轨迹改为纵向」，所以 DOM 只渲染一份，靠断点切换排布，
+   而不是在 JS 里读 matchMedia 猜屏幕宽度（那样拖窗口就不会重排）。 */
+.tl-scroll{overflow:visible;margin:0;padding:0}
+.tl-h .tl-item{display:block;padding:0 0 20px 26px;min-height:46px}
+.tl-h .tl-dot{left:0;top:5px}
+.tl-h .tl-item::before{
+  content:"";position:absolute;left:5px;top:19px;bottom:-2px;width:1px;background:var(--line);
+}
+.tl-h .tl-item:last-child{padding-bottom:2px}
+.tl-h .tl-item:last-child::before{display:none}
+
+/* —— 横向时间轴只在宽屏成立 —— */
+@media (min-width:900px){
+  .tl-scroll{overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;scrollbar-width:thin}
+  .tl-scroll::-webkit-scrollbar{height:5px}
+  .tl-scroll::-webkit-scrollbar-thumb{background:var(--line);border-radius:99px}
+  /* 右边缘渐隐：卡在边界上被切一半的卡片，看起来像「坏了」，
+     渐隐之后它才读作「右边还有，可以滑」。
+     遮罩只取 alpha，--ink 是纯色，用它就不用引入新的色值。 */
+  .tl-scroll{
+    -webkit-mask-image:linear-gradient(90deg,var(--ink) calc(100% - 46px),transparent);
+    mask-image:linear-gradient(90deg,var(--ink) calc(100% - 46px),transparent);
+  }
+  .tl-h{display:flex;align-items:flex-start;padding:2px 0 8px}
+  .tl-h .tl-item{flex:0 0 auto;width:172px;padding:0 18px 0 0;min-height:96px}
+  .tl-h .tl-dot{top:3px}
+  .tl-h .tl-item::before{
+    left:0;right:0;top:8px;bottom:auto;width:auto;height:1px;background:var(--line);
+  }
+  .tl-h .tl-item:last-child{border-bottom:none;padding-bottom:0}
+  .tl-h .tl-item:last-child::before{display:block;background:linear-gradient(90deg,var(--line),transparent)}
+  .tl-h .tl-date{padding-top:20px}
+  .tl-h .tl-title{font-size:13.5px}
+  .tl-h .tl-quote{font-size:12px;color:var(--muted);margin-top:3px}
+  /* 引言长短不一时卡片底边会参差，限两行让一排看起来是齐的 */
+  .tl-h .tl-title,.tl-h .tl-quote{
+    display:-webkit-box;-webkit-box-orient:vertical;overflow:hidden;
+    -webkit-line-clamp:2;
+  }
+  .tl-h .tl-title{-webkit-line-clamp:1}
+}
+
+/* =========================================================================
+   心情曲线（手写 SVG，无图表库）
+   ========================================================================= */
+.mood-wrap{position:relative}
+.mood-curve{
+  display:block;width:100%;height:84px;color:var(--brand);
+  overflow:visible;
+}
+.mood-axis{
+  display:flex;justify-content:space-between;
+  font-size:11px;color:var(--muted);margin-top:2px;letter-spacing:.03em;
+}
+.mood-empty{
+  display:flex;align-items:center;justify-content:center;
+  height:84px;border-radius:var(--radius-sm);
+  background:var(--bg-2);color:var(--muted);font-size:12.5px;
+  text-align:center;padding:0 14px;line-height:1.7;
+}
+
+/* 心情选择器 */
+.mood-pick{display:flex;gap:7px;margin:10px 0 2px}
+.mood-btn{
+  flex:1;min-width:0;padding:11px 0 9px;border-radius:var(--radius-sm);
+  border:1px solid var(--line);background:var(--field);
+  display:flex;flex-direction:column;align-items:center;gap:4px;
+  color:var(--muted);transition:all .15s ease;
+}
+.mood-btn .ic{color:var(--faint)}
+.mood-btn span{font-size:11px}
+.mood-btn.on{background:var(--brand-soft);border-color:var(--brand);color:var(--brand-ink);font-weight:600}
+.mood-btn.on .ic{color:var(--brand-ink)}
+
+/* 今日小记 */
+.note-box{position:relative}
+.note-box textarea{min-height:88px}
+.note-foot{
+  display:flex;align-items:center;justify-content:space-between;
+  gap:10px;margin-top:9px;
+}
+.note-hint{font-size:11.5px;color:var(--faint)}
+.note-foot .btn{min-height:38px;padding:0 18px;font-size:13.5px}
+
+/* 记录条目（记录页 / 我的） */
+.rec-item{
+  display:flex;align-items:flex-start;gap:11px;
+  padding:13px 14px;background:var(--card);border:1px solid var(--line);
+  border-radius:var(--radius-sm);margin-bottom:9px;
+  transition:border-color .18s ease, box-shadow .18s ease;
+}
+.rec-item .ri-ic{flex:none;color:var(--brand);padding-top:2px}
+.rec-item .ri-body{min-width:0;flex:1}
+.rec-item .ri-body b{display:block;font-size:14px;font-weight:600;line-height:1.5}
+.rec-item .ri-body p{margin:3px 0 0;font-size:12.5px;color:var(--muted);line-height:1.65}
+.rec-item .ri-body .when{font-size:11px;color:var(--faint);letter-spacing:.03em}
+.rec-item.k-mood .ri-ic{color:var(--warm)}
+.rec-item.k-note .ri-ic{color:var(--mist-ink)}
+
+/* 空状态：有内容、有指引，不是一片空白 */
+.empty{
+  text-align:center;padding:34px 22px;
+  background:var(--card);border:1px dashed var(--line);
+  border-radius:var(--radius);color:var(--muted);
+}
+.empty .ic{margin:0 auto 12px;color:var(--faint-2)}
+.empty b{display:block;font-size:14.5px;color:var(--ink-2);font-weight:600;margin-bottom:5px}
+.empty p{font-size:13px;margin:0;line-height:1.75}
+.empty .btn{margin-top:16px}
+
+/* ---------- 我的 ---------- */
+.me-head{
+  display:flex;align-items:center;gap:14px;margin:4px 2px 18px;
+}
+.me-avatar{
+  flex:none;width:58px;height:58px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(150deg,var(--brand-soft),var(--mist-soft));
+  border:1px solid var(--brand-line);color:var(--brand-ink);
+  font-size:20px;font-weight:700;
+}
+.me-head h1{margin:0;font-size:19px;line-height:1.4}
+.me-head .sub{font-size:12.5px;color:var(--muted);margin:3px 0 0}
+.set-row{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding:14px 0;border-bottom:1px solid var(--line-2);
+}
+.set-row:last-child{border-bottom:none}
+.set-row .sr-label{font-size:14.5px}
+.set-row .sr-label small{display:block;font-size:11.5px;color:var(--muted);margin-top:2px;line-height:1.6}
+.set-row .sr-val{font-size:13px;color:var(--muted);flex:none}
+
+/* 开关 */
+.switch{
+  flex:none;width:46px;height:27px;border-radius:99px;background:var(--track);
+  position:relative;transition:background .18s ease;
+}
+.switch::after{
+  content:"";position:absolute;left:3px;top:3px;width:21px;height:21px;border-radius:50%;
+  background:var(--card);box-shadow:0 1px 3px rgba(70,62,50,.18);transition:transform .18s ease;
+}
+.switch.on{background:var(--brand)}
+.switch.on::after{transform:translateX(19px)}
+
+/* ---------- 15 题 ---------- */
+.q-flow{max-width:var(--maxw);margin:0 auto}
+.q-bar{
+  height:2px;background:var(--track);border-radius:99px;overflow:hidden;margin:2px 0 22px;
+}
+.q-bar i{display:block;height:100%;background:var(--brand);border-radius:99px;transition:width .3s ease}
+.q-count{
+  font-size:11.5px;letter-spacing:.18em;color:var(--muted);
+  margin:0 0 10px;font-weight:600;
+}
+.q-text{font-size:19px;font-weight:600;line-height:1.65;margin:0 0 6px;letter-spacing:.01em}
+.q-hint{font-size:12.5px;color:var(--muted);margin:8px 0 20px;line-height:1.7}
+.q-opts{display:flex;flex-direction:column;gap:9px}
+.q-opt{
+  display:flex;align-items:flex-start;gap:11px;text-align:left;
+  width:100%;padding:15px 15px;border-radius:var(--radius-sm);
+  background:var(--card);border:1px solid var(--line);
+  font-size:14.5px;line-height:1.65;color:var(--ink);
+  transition:border-color .15s ease, background .15s ease, transform .08s ease;
+}
+.q-opt:active{transform:scale(.99)}
+.q-opt .q-key{
+  flex:none;width:22px;height:22px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:11.5px;font-weight:700;
+  background:var(--bg-2);color:var(--muted);
+}
+.q-opt.on{border-color:var(--brand);background:var(--brand-soft)}
+.q-opt.on .q-key{background:var(--brand-ink);color:var(--on-brand)}
+.q-text-input{width:100%;min-height:96px}
+.q-nav{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:22px}
+.q-nav .link{padding:10px 4px}
+
+/* 完成页 */
+.done-head{text-align:center;padding:14px 4px 6px}
+.done-head h2{font-size:23px;margin:10px 0 6px;line-height:1.4}
+.done-head p{font-size:13.5px;color:var(--ink-2);margin:0;line-height:1.8}
+.done-mark{
+  width:62px;height:62px;border-radius:50%;margin:0 auto 6px;
+  display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(150deg,var(--brand-soft),var(--mist-soft));
+  color:var(--brand-ink);border:1px solid var(--brand-line);
+}
+.rec-sec{margin:0 0 16px}
+.rec-sec h3{
+  font-size:12px;letter-spacing:.14em;color:var(--muted);
+  margin:0 0 7px;font-weight:600;
+}
+.rec-sec p{margin:0;font-size:14.5px;line-height:1.85;color:var(--ink-2)}
+.rec-sec.quote p{
+  font-size:15px;color:var(--ink);background:var(--brand-soft-2);
+  border-left:3px solid var(--brand-line);border-radius:0 12px 12px 0;
+  padding:12px 15px;line-height:1.85;
+}
+.rec-dims{display:flex;flex-wrap:wrap;gap:7px;margin-top:2px}
+
+/* =========================================================================
+   右栏卡片 / 手机内联卡片
+   同一份 HTML 渲染两遍：手机放在正文流末尾（#view 内），
+   ≥1180px 时手机那份 display:none、右栏那份出现。
+   所以 .rail-card 必须是【全局】样式，不能只写在 1180 断点里。
+   ========================================================================= */
+.rail-card{
+  background:var(--card);border:1px solid var(--line);
+  border-radius:var(--radius);box-shadow:var(--shadow);
+  padding:16px 16px;margin-bottom:14px;
+}
+.rail-card h4{
+  margin:0 0 10px;font-size:12.5px;font-weight:600;
+  letter-spacing:.06em;color:var(--ink-2);
+  display:flex;align-items:center;gap:6px;
+}
+.rail-card h4 .ic{color:var(--faint)}
+.rail-card .rail-note{font-size:12px;color:var(--muted);line-height:1.7;margin:8px 0 0}
+.rail-card .statrow{margin-top:0}
+.rail-quiet{
+  font-size:12px;color:var(--faint);line-height:1.9;
+  padding:6px 4px 0;text-align:center;
+}
+.rail-mobile{margin-top:4px}
+
+/* ---------- 昵称 ---------- */
+.nick-wrap{max-width:440px;margin:0 auto;padding-top:22px}
+.nick-mark{
+  width:64px;height:64px;border-radius:50%;margin:0 auto 18px;
+  display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(150deg,var(--brand-soft),var(--warm-soft));
+  color:var(--brand-ink);border:1px solid var(--brand-line);
+}
+.nick-wrap h2{font-size:22px;margin:0 0 8px;text-align:center;line-height:1.45}
+.nick-wrap .nick-sub{
+  font-size:13.5px;color:var(--ink-2);text-align:center;
+  margin:0 0 22px;line-height:1.8;
+}
+.nick-wrap input{
+  width:100%;border:1px solid var(--line);background:var(--field);
+  border-radius:14px;padding:14px 15px;font-size:16px;outline:none;
+  text-align:center;letter-spacing:.04em;
+}
+.nick-wrap input:focus{border-color:var(--brand-line);background:var(--card)}
+.nick-wrap .btn{margin-top:16px}
+
+/* ---------- 成长评估（旧 5 题，退役中，样式保留） ---------- */
 .assess .page-intro{font-size:15px;line-height:1.8}
 .assess-top{text-align:center;margin:6px 0 4px}
 .assess-top h2{font-size:22px;margin:8px 0 2px}
@@ -312,24 +813,154 @@ textarea:focus{border-color:#c4d6cb;background:#fff}
   margin:6px 2px 14px;
 }
 .aq{padding-top:16px}
-.aq-no{font-size:11px;color:var(--warm);letter-spacing:.2em;margin:0}
+.aq-no{font-size:11px;color:var(--warm-ink);letter-spacing:.2em;margin:0}
 .aq-text{font-size:15.5px;font-weight:600;margin:4px 0 12px;line-height:1.6}
 .scale{display:flex;gap:6px}
 .sc{
   flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;
   padding:8px 0 6px;border:1px solid var(--line);border-radius:12px;
-  background:#fbfaf6;font-size:10px;color:var(--muted);
+  background:var(--field);font-size:10px;color:var(--muted);
 }
 .sc b{font-size:15px;color:var(--ink-2)}
-.sc.on{background:var(--brand);border-color:var(--brand)}
-.sc.on b,.sc.on span{color:#fff}
+.sc.on{background:var(--brand-ink);border-color:var(--brand-ink)}
+.sc.on b,.sc.on span{color:var(--on-brand)}
 
+/* =========================================================================
+   断点
+   ========================================================================= */
 @media (min-width:600px){
   body{background:
-    radial-gradient(1200px 600px at 15% -10%, #ece8dd 0, transparent 60%),
-    var(--bg);}
+    radial-gradient(1200px 600px at 15% -10%, var(--glow) 0, transparent 60%),
+    var(--bg);
+    background-attachment:fixed;}
 }
+
+/* —— 左栏出现：桌面形态 —— */
+@media (min-width:900px){
+  #app{
+    display:grid;
+    /* minmax(0,1fr) 不是 1fr：1fr 等于 minmax(auto,1fr)，不会收缩到内容宽度以下，
+       横向时间轴会把整页撑出横向滚动条 */
+    grid-template-columns:var(--rail-w) minmax(0,1fr);
+    gap:0 30px;
+    max-width:1140px;
+    margin:0 auto;
+    padding:0 26px;
+    align-items:start;
+  }
+  #rail{
+    display:flex;flex-direction:column;
+    position:sticky;top:0;height:100vh;
+    /* dvh：100vh 会把 iOS 地址栏那块也算进去，左侧栏因此比屏幕高出一截，
+       底部「不是变成更好的人…」那句会被推到看不见的地方 */
+    height:100dvh;
+    padding:28px 0 26px;overflow-y:auto;
+  }
+  #rail2{display:none}
+  #tabbar{display:none}
+  /* 示例模式：横幅把左栏整体推下来（详见 #demoBar 那段） */
+  body.demo-on #rail{top:var(--demoh);height:calc(100dvh - var(--demoh))}
+  main#view{max-width:none;margin:0;padding:6px 0 72px}
+
+  /* 顶栏在桌面降为一条细面包屑，但【位置不变】—— #btnBack 仍是返回的唯一入口 */
+  #topbar{
+    height:52px;justify-content:flex-start;
+    padding:0 0;
+    background:var(--bg);
+    background:color-mix(in srgb, var(--bg) 86%, transparent);
+  }
+  #pageTitle{font-size:12.5px;font-weight:500;letter-spacing:.18em;color:var(--muted)}
+  #btnBack{
+    position:static;transform:none;width:auto;height:34px;
+    padding:0 14px 0 10px;margin-right:6px;border-radius:99px;
+    font-size:17px;line-height:1;background:var(--card);border:1px solid var(--line);
+  }
+  #btnBack .bb-label{display:inline;margin-left:5px}
+
+  /* 桌面侧栏导航 */
+  #railNav{display:block;padding:0 4px}
+  #railNav .tab{
+    width:100%;height:42px;justify-content:flex-start;gap:11px;
+    padding:0 13px;border-radius:12px;font-size:14px;margin-bottom:2px;
+    font-weight:500;
+  }
+  #railNav .tab .ic{color:var(--faint)}
+  #railNav .tab.on{background:var(--brand-soft);color:var(--brand-ink);font-weight:600}
+  #railNav .tab.on .ic{color:var(--brand-ink)}
+
+  #toast{bottom:44px}
+  .topic-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .tl-scroll{margin:0;padding:0}
+}
+
+/* —— 右栏出现：三栏 —— */
+@media (min-width:1180px){
+  #app{
+    grid-template-columns:var(--rail-w) minmax(0,1fr) var(--rail2-w);
+    gap:0 34px;
+    max-width:1400px;
+    padding:0 34px;
+  }
+  #rail2{
+    display:block;
+    position:sticky;top:0;align-self:start;
+    padding:28px 0 26px;
+    max-height:100vh;overflow-y:auto;
+    max-height:100dvh;                /* 同上，见 #rail 的说明 */
+  }
+  /* 示例模式：横幅把右栏一起推下来（详见 #demoBar 那段） */
+  body.demo-on #rail2{top:var(--demoh);max-height:calc(100dvh - var(--demoh))}
+  /* 右栏出现后，正文里那份内联副本让位 */
+  .rail-mobile{display:none}
+  .rail-inline>*:last-child{margin-bottom:0}
+
+  /* 右栏只有 300px（卡片内宽 262px），空间比正文窄得多 ——
+     这几条只对右栏生效，正文里那份内联副本仍然用默认（更宽松）的排版。 */
+  #rail2 .mood-pick{gap:5px}
+  #rail2 .mood-btn{padding:10px 0 8px}
+  #rail2 .mood-btn .ic{width:20px;height:20px}
+  #rail2 .mood-btn span{font-size:10.5px}
+  #rail2 .lesson-row{padding:11px 12px;gap:9px}
+  #rail2 .lesson-row .lr-main{gap:9px}
+  #rail2 .lr-no{width:30px;height:30px;font-size:12px}
+  #rail2 .lr-text b{font-size:13.5px;line-height:1.45}
+}
+
 @media (max-width:360px){
-  .hero-q{font-size:24px}
-  .statgrid{grid-template-columns:repeat(2,1fr)}
+  .hero-q{font-size:22px}
+  .invite h2{font-size:19px}
+  .statgrid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .topic-grid{grid-template-columns:minmax(0,1fr)}
+  main#view{padding-left:16px;padding-right:16px}
+  .tl-scroll{margin:0 -16px;padding:0 16px}
+  .q-text{font-size:17.5px}
+}
+
+/* ---------- 「先看看示例」入口 ---------- */
+.nick-alt{display:flex;align-items:center;justify-content:center;gap:10px}
+.nick-sep{color:var(--faint-2);font-size:12px}
+.empty-alt{font-size:12.5px;color:var(--muted);margin:12px 0 0}
+
+/* ---------- 悬停态 ----------
+   全部集中在这里，而且只对真的有指针的设备生效。
+
+   为什么必须包起来：iOS 上点一下会同时触发 hover，而且【不会自动退掉】——
+   点过的心情按钮会一直留着一圈加深的边框，看起来像坏了。
+   鼠标设备上这些反馈是好的，所以不是删掉，是加条件。
+   （放在文件末尾而不是各回各家：这条规则本身就是一句话的事，
+     拆成八处反而看不出「所有悬停态都受同一个条件约束」。）
+
+   注意 :not(.on)：这三条原本散在各自的 .on 规则【之前】，
+   挪到文件末尾后源码顺序反了过来，同权重下悬停会盖掉选中态 ——
+   鼠标划过当前页签，页签会从「选中」变成「未选中」的样子。
+   :not(.on) 既修好这个，也正好是这个规则本来想说的意思。 */
+@media (hover:hover){
+  .topic-card:hover{border-color:var(--brand-line);box-shadow:var(--shadow-lift)}
+  .lesson-row:hover{border-color:var(--brand-line);box-shadow:var(--shadow)}
+  .lr-fav:hover{background:var(--tint)}
+  .mood-btn:not(.on):hover{border-color:var(--brand-line)}
+  .rec-item:hover{border-color:var(--brand-line);box-shadow:var(--shadow)}
+  .q-opt:not(.on):hover{border-color:var(--brand-line);background:var(--brand-soft-2)}
+  #btnBack:hover{border-color:var(--brand-line);color:var(--brand-ink)}
+  #railNav .tab:not(.on):hover{background:var(--bg-2);color:var(--ink-2)}
 }

@@ -1,31 +1,103 @@
 ﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
+<!-- 成长空间 · 单文件版 | build 2026-09-18T16:15:24+08:00 | src:19f7395a
+     本文件由 tools/build-single.js 自动生成，请勿手工编辑；
+     任何改动请修改 index.html / css / js 后重新运行：node tools/build-single.js -->
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <meta name="description" content="成长空间：一个温和的个人成长小工具。自我观察、情绪、沟通与习惯，每天 10 分钟。">
+  <meta name="description" content="成长空间：一个可以慢慢看见自己变化的地方。记录、观察、看见变化。">
   <title>成长空间</title>
+
+  <!-- iOS「添加到主屏幕」后按全屏 App 打开，而不是塞进 Safari 的浏览器外壳 -->
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="成长空间">
+
+  <!-- 主屏图标。没有它，iOS 会拿一张页面截图当图标。
+       图形由 tools/icon.js 算出来（不引素材文件），改配色跑一次即可。
+       iOS 只认 PNG，不认 SVG，所以这里是 PNG。 -->
+  <link rel="icon" href="icon-180.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="icon-180.png">
+
   <style>
 /* =========================================================================
    成长空间 · 样式
    温和、简洁、有一点治愈感；成人向生活方式工具；移动端优先。
+
+   两条纪律，改动前请先读：
+   1. :root 里的变量【名】只增不改 —— 全文件的颜色只从变量取，没有第二处 hex。
+      改色板只动 :root 一段，页面样式自动跟随。
+   2. 基础态写死手机形态；900px 加左栏，1180px 加右栏。桌面端坚持 body 滚动，
+      不做内部滚动容器 —— router.js / lesson.js 靠 window.scrollTo(0,0) 复位，
+      主区一旦变成 overflow:auto，切页会静默保留上一页滚动位置。
    ========================================================================= */
 
 :root{
-  --bg:#f5f2ec;
+  /* —— 表层 —— */
+  --bg:#f7f5f1;
+  --bg-2:#f1eee8;
   --card:#ffffff;
-  --ink:#2b2925;
-  --ink-2:#4a463f;
-  --muted:#9b948a;
-  --line:#eae3d5;
-  --brand:#5f8b77;
-  --brand-ink:#3d6551;
-  --brand-soft:#e9f1ec;
-  --warm:#cf9b74;
-  --warm-soft:#f8ece1;
+  --glow:#eae5da;            /* ≥600px 时 body 上那层极淡的氛围光 */
+
+  /* —— 文字 —— */
+  --ink:#2f2c28;
+  --ink-2:#56514a;
+  --muted:#7d766c;           /* 已调到对白底 ≈4.5:1 */
+  --faint:#a49c8f;           /* 纯装饰用，不承载信息 */
+  --faint-2:#c6bfb2;
+
+  /* —— 线 —— */
+  --line:#e9e4db;
+  --line-2:#f0ece5;
+  --track:#eae4d9;           /* 进度条底槽 */
+
+  /* —— 主色：雾绿 —— */
+  --brand:#7d9c92;           /* 只做填充（点、线、条），不做文字底色 */
+  --brand-2:#a8c0b5;         /* 渐变的另一端 */
+  --brand-ink:#45655c;       /* 文字 / 主按钮底：对白 6.4:1 */
+  --brand-soft:#eaf1ee;
+  --brand-soft-2:#f2f8f5;
+  --brand-line:#cfded7;
+  --on-brand:#ffffff;
+
+  /* —— 辅色：雾蓝 —— */
+  --mist:#8fa6b8;
+  --mist-ink:#4e6b7c;
+  --mist-soft:#ecf1f5;
+
+  /* —— 点缀：米杏 / 暖橙（少量） —— */
+  --warm:#c99a6e;
+  --warm-ink:#8f5a2e;
+  --warm-soft:#f9efe4;
+  --warm-line:#f0ddc9;
+
+  /* —— 中性标签 / 已完成态 —— */
+  --tint:#f0ece4;
+  --tint-ink:#7b7467;
+  --tint-2:#f3f1ec;
+  --tint-2-ink:#9c958a;
+  --done-bg:#fafaf7;
+  --done-line:#e3dfd3;
+  --done-tint:#eef0e6;
+  --done-ink:#a6a194;
+  --step-bg:#efe9dc;
+  --step-ink:#9f988b;
+  --field:#fbfaf6;
+
+  /* —— 正文（比 --ink 略软，长文阅读用） —— */
+  --reading:#33312c;
+  --reading-2:#3b3832;
+
+  /* —— 尺寸 —— */
   --radius:18px;
-  --shadow:0 10px 26px rgba(80,70,55,.06);
-  --maxw:560px;
+  --radius-sm:13px;
+  --shadow:0 8px 24px rgba(70,62,50,.055);
+  --shadow-lift:0 12px 30px rgba(70,62,50,.09);
+  --maxw:640px;
+  --rail-w:236px;
+  --rail2-w:300px;
   --font:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans SC",sans-serif;
 }
 
@@ -38,13 +110,58 @@ body{
   color:var(--ink);
   line-height:1.7;
   min-height:100vh;
+  /* iOS 的 100vh 量的是「地址栏收起时」的高度，比看得见的区域高 ——
+     用它当最小高度，页面底部会多出一截空白。dvh 才是跟着视口变的那一个。
+     先写 vh 再写 dvh：不认识 dvh 的浏览器保留上面那行，不会两边都落空。 */
+  min-height:100dvh;
 }
 button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
 input,textarea{font-family:inherit;color:var(--ink)}
 
+/* 手指点按的两个细节：
+   touch-action:manipulation 去掉移动端「等 300ms 看是不是双击」的延迟，
+   点了就有反应；再配一条 :active 反馈，否则手机上完全不知道自己点中没有。
+   （-webkit-tap-highlight-color 已经在上面全局关掉了，那是系统默认的高亮块，
+     又丑又不受控，所以这里用 transform 自己给一个更轻的。） */
+button,.topic-card,.lesson-row,.q-opt,.tab{
+  touch-action:manipulation;
+}
+@media (hover:none){
+  button:active,.topic-card:active,.lesson-row:active,.q-opt:active,.tab:active{
+    opacity:.72;
+  }
+}
+
 .hidden{display:none !important}
 
-/* 页面容器：窄列居中，桌面两侧留气氛 */
+/* 键盘可达性：鼠标点击不留框，键盘 Tab 才显示 */
+:focus{outline:none}
+:focus-visible{outline:2px solid var(--brand);outline-offset:2px;border-radius:6px}
+
+/* =========================================================================
+   外壳：手机是单列流式；≥900px 起左栏；≥1180px 起右栏。
+   #rail / #rail2 在基础态直接 display:none，不占位。
+   ========================================================================= */
+#app{display:block}
+#rail,#rail2{display:none}
+
+#rail .rail-logo{
+  display:flex;align-items:center;gap:10px;
+  padding:0 12px 22px;color:var(--brand-ink);
+}
+#rail .rl-mark{display:flex;color:var(--brand);flex:none}
+#rail .rl-text{font-size:16px;font-weight:700;letter-spacing:.06em;line-height:1.25}
+#rail .rl-text em{
+  display:block;font-style:normal;font-size:10px;font-weight:400;
+  letter-spacing:.14em;color:var(--faint);margin-top:3px;
+}
+#rail .rail-quote{
+  margin:auto 12px 0;padding-top:22px;
+  font-size:12px;line-height:1.9;color:var(--faint);
+  border-top:1px solid var(--line);
+}
+
+/* 页面容器 */
 main#view{
   max-width:var(--maxw);
   margin:0 auto;
@@ -57,6 +174,7 @@ body.no-tab main#view{padding-bottom:36px}
   position:sticky;top:0;z-index:30;
   display:flex;align-items:center;justify-content:center;
   height:52px;
+  background:var(--bg);                                   /* color-mix 不支持时的回退 */
   background:color-mix(in srgb, var(--bg) 82%, transparent);
   backdrop-filter:blur(8px);
   -webkit-backdrop-filter:blur(8px);
@@ -66,14 +184,24 @@ body.no-tab main#view{padding-bottom:36px}
 #btnBack{
   position:absolute;left:10px;top:50%;transform:translateY(-50%);
   width:40px;height:40px;font-size:26px;line-height:1;color:var(--ink-2);
+  display:flex;align-items:center;justify-content:center;
 }
+#btnBack .bb-label{display:none;font-size:13px;font-weight:500;letter-spacing:.02em}
 body.no-bar #topbar{display:none}
 
-/* ---------- 底部导航 ---------- */
+/* ---------- 主导航（两个容器共用 .tab 规则，数据源只有 router.js 的 TABS 一处） ---------- */
+.tab{
+  display:flex;align-items:center;justify-content:center;
+  color:var(--muted);letter-spacing:.03em;
+  transition:color .15s ease, background .15s ease;
+}
+.tab .ic{flex:none}
+
 #tabbar{
   position:fixed;left:0;right:0;bottom:0;z-index:40;
   max-width:var(--maxw);margin:0 auto;
   display:flex;
+  background:var(--card);                                 /* color-mix 回退 */
   background:color-mix(in srgb, var(--card) 92%, transparent);
   backdrop-filter:blur(10px);
   -webkit-backdrop-filter:blur(10px);
@@ -82,22 +210,54 @@ body.no-bar #topbar{display:none}
 }
 #tabbar.hidden{display:none}
 #tabbar .tab{
-  flex:1;height:60px;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;
-  font-size:12px;color:var(--muted);letter-spacing:.03em;
-  position:relative;
-}
-#tabbar .tab::before{
-  content:"";width:4px;height:4px;border-radius:50%;
-  background:transparent;margin-bottom:2px;
+  flex:1;height:60px;flex-direction:column;gap:3px;
+  font-size:11.5px;position:relative;
 }
 #tabbar .tab.on{color:var(--brand-ink);font-weight:600}
-#tabbar .tab.on::before{background:var(--brand)}
+#tabbar .tab.on::before{
+  content:"";position:absolute;top:0;left:50%;transform:translateX(-50%);
+  width:22px;height:2px;border-radius:0 0 3px 3px;background:var(--brand);
+}
+
+/* ---------- 示例模式横幅 ----------
+   固定在顶部，所以它会盖住所有 top:0 的 sticky 元素。
+   --demoh 是「横幅有多高」，body 用它顶开内容，下面几条用它把
+   顶栏 / 左栏 / 右栏的 sticky 起点一起推下来 —— 少推一个，
+   那个元素就会永远藏在横幅底下。 */
+body.demo-on{
+  --demoh:calc(46px + env(safe-area-inset-top));
+  padding-top:var(--demoh);
+}
+body.demo-on #topbar{top:var(--demoh)}
+
+#demoBar{
+  position:fixed;left:0;right:0;top:0;z-index:70;
+  min-height:46px;
+  display:flex;align-items:center;justify-content:center;gap:12px;
+  padding:0 14px;
+  padding-top:env(safe-area-inset-top);   /* 刘海机：别让文字躲进状态栏 */
+  background:var(--ink);
+  color:var(--on-brand);
+  font-size:12.5px;
+  line-height:1.4;
+}
+/* 必须显式写这一条。上面给了 display:flex，作者样式盖过浏览器默认的
+   [hidden]{display:none} —— 于是 hidden 属性虽然还在，横幅却照样占着
+   46px 显示在每一页上。顶栏和底栏也一样，各有各的 .hidden 规则。 */
+#demoBar[hidden]{display:none}
+#demoExit{
+  flex:none;
+  padding:6px 12px;border-radius:99px;
+  font-size:12px;font-weight:600;
+  background:var(--on-brand);color:var(--ink);
+  touch-action:manipulation;
+}
+.db-text{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
 /* ---------- 轻提示 ---------- */
 #toast{
   position:fixed;left:50%;bottom:88px;transform:translateX(-50%) translateY(8px);
-  z-index:60;background:rgba(43,41,37,.88);color:#fff;
+  z-index:60;background:rgba(47,44,40,.9);color:var(--on-brand);
   font-size:13px;padding:9px 16px;border-radius:999px;
   opacity:0;pointer-events:none;transition:.22s ease;white-space:nowrap;
 }
@@ -108,8 +268,9 @@ body.no-tab #toast{bottom:40px}
 .muted{color:var(--muted)}
 .small{font-size:12px}
 .center{text-align:center}
+.ic{display:block;flex:none}
 .label{
-  font-size:12px;letter-spacing:.14em;color:var(--muted);
+  font-size:11.5px;letter-spacing:.16em;color:var(--muted);
   text-transform:uppercase;
 }
 .card{
@@ -122,26 +283,35 @@ body.no-tab #toast{bottom:40px}
   display:flex;align-items:baseline;justify-content:space-between;
   margin-bottom:6px;gap:10px;
 }
-.card h3{margin:2px 0 6px;font-size:18px;line-height:1.5}
+.card h3{margin:2px 0 6px;font-size:17px;line-height:1.5;letter-spacing:.01em}
 .card .sub,.card p{margin:4px 0}
 .meta{font-size:13px;margin:2px 0}
 .tag{
   display:inline-block;font-size:11px;padding:2px 9px;border-radius:999px;
-  background:#f0ece4;color:#8a8376;white-space:nowrap;
+  background:var(--tint);color:var(--tint-ink);white-space:nowrap;
 }
 .tag.live,.tag.ok{background:var(--brand-soft);color:var(--brand-ink)}
-.tag.soon{background:#f1eee7;color:#a49c8f}
+.tag.soon{background:var(--tint-2);color:var(--tint-2-ink)}
 .page-intro{color:var(--ink-2);font-size:14px;margin:6px 2px 14px}
+
+/* 区块标题（首页/记录/探索各块共用） */
+.sec-head{
+  display:flex;align-items:baseline;justify-content:space-between;
+  gap:10px;margin:22px 2px 10px;
+}
+.sec-head h2{margin:0;font-size:16px;font-weight:600;letter-spacing:.01em}
+.sec-head .link{padding:0}
+.sec-note{font-size:12.5px;color:var(--muted);margin:-4px 2px 10px}
 
 /* 按钮 */
 .btn{
-  display:inline-flex;align-items:center;justify-content:center;
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;
   min-height:46px;padding:0 20px;border-radius:999px;
   font-size:15px;font-weight:600;letter-spacing:.02em;
   transition:transform .08s ease, opacity .15s;
 }
 .btn:active{transform:scale(.98)}
-.btn.primary{background:var(--brand);color:#fff}
+.btn.primary{background:var(--brand-ink);color:var(--on-brand)}
 .btn.ghost{background:var(--card);color:var(--brand-ink);border:1px solid var(--line)}
 .btn.wide{width:100%}
 .btn[disabled]{opacity:.45;pointer-events:none}
@@ -155,8 +325,8 @@ body.no-tab #toast{bottom:40px}
 .link.small{font-size:12px;color:var(--muted)}
 
 /* 进度条与统计 */
-.bar{height:8px;border-radius:999px;background:#eee7da;overflow:hidden;margin:8px 0 4px}
-.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--brand),#83a68f);border-radius:999px;transition:width .4s ease}
+.bar{height:8px;border-radius:999px;background:var(--track);overflow:hidden;margin:8px 0 4px}
+.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--brand),var(--brand-2));border-radius:999px;transition:width .4s ease}
 .bar.mini{margin:10px 0 2px}
 .statrow{display:flex;gap:6px;margin-top:12px}
 .stat{flex:1;text-align:center}
@@ -165,26 +335,90 @@ body.no-tab #toast{bottom:40px}
 
 /* ---------- 首页 ---------- */
 .hero{
-  background:linear-gradient(160deg,var(--brand-soft),#f3ead9);
+  background:linear-gradient(160deg,var(--brand-soft),var(--bg-2));
   border-radius:22px;padding:20px 20px 22px;margin-bottom:16px;
 }
 .hero-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
 .brand-mini{font-size:12px;letter-spacing:.28em;color:var(--brand-ink);font-weight:600}
 .streak-chip{
-  font-size:12px;color:var(--brand-ink);background:rgba(255,255,255,.65);
+  font-size:12px;color:var(--brand-ink);
+  background:rgba(255,255,255,.65);
   padding:4px 11px;border-radius:999px;
 }
 .greet{font-size:13px;color:var(--brand-ink);margin:0 0 2px}
-.hero-q{font-size:27px;line-height:1.35;margin:0;font-weight:700;letter-spacing:.01em}
+.hero-q{font-size:26px;line-height:1.35;margin:0;font-weight:700;letter-spacing:.01em}
 .today-card h3{font-size:19px}
 .today-card .btn{margin-top:14px}
 .today-note{font-size:13px;color:var(--muted);text-align:center;margin:4px 0 6px}
 .done-card .big{font-size:15px;color:var(--brand-ink);background:var(--brand-soft);display:inline-block;padding:8px 14px;border-radius:999px;margin-bottom:8px;font-weight:700;letter-spacing:.1em}
 .card .pt{font-weight:600;color:var(--ink-2)}
 
+/* 首页问候头（参考图里：左问候，右日期） */
+.home-head{
+  display:flex;align-items:flex-start;justify-content:space-between;
+  gap:14px;margin:4px 2px 18px;
+}
+.home-head h1{margin:0;font-size:21px;line-height:1.4;letter-spacing:.01em}
+.home-head .sub{font-size:13px;color:var(--muted);margin:5px 0 0}
+.home-date{
+  flex:none;text-align:right;font-size:11.5px;color:var(--muted);
+  line-height:1.6;letter-spacing:.03em;padding-top:3px;
+}
+.home-date b{display:block;font-size:12.5px;font-weight:600;color:var(--ink-2)}
+
+/* 探索入口（首页「最近的你，还好吗？」） */
+.invite{
+  position:relative;overflow:hidden;
+  background:linear-gradient(150deg,var(--brand-soft) 0%,var(--mist-soft) 58%,var(--warm-soft) 130%);
+  border:1px solid var(--brand-line);
+  border-radius:22px;padding:22px 20px 20px;margin:0 0 16px;
+}
+.invite .inv-kicker{
+  font-size:11px;letter-spacing:.2em;color:var(--brand-ink);
+  font-weight:600;margin:0 0 8px;
+}
+.invite h2{margin:0;font-size:22px;line-height:1.4;letter-spacing:.01em}
+.invite .inv-sub{font-size:13.5px;color:var(--ink-2);margin:9px 0 0;line-height:1.75}
+.invite .inv-note{font-size:12px;color:var(--muted);margin:10px 0 0;line-height:1.7}
+.invite .inv-meta{
+  display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+  font-size:11.5px;color:var(--muted);margin:0 0 14px;letter-spacing:.03em;
+}
+.invite .btn{margin-top:16px}
+.invite.done{background:linear-gradient(150deg,var(--brand-soft),var(--card))}
+/* 角上那抹水彩：纯 CSS 径向渐变，不引外部图片 */
+.invite .inv-art{
+  position:absolute;right:-46px;top:-46px;width:190px;height:190px;
+  border-radius:50%;pointer-events:none;
+  background:radial-gradient(circle at 38% 38%,
+    rgba(143,166,184,.30), rgba(143,166,184,.10) 58%, transparent 72%);
+}
+.invite .inv-art::after{
+  content:"";position:absolute;left:26px;top:52px;width:110px;height:110px;
+  border-radius:50%;
+  background:radial-gradient(circle at 45% 45%,
+    rgba(201,154,110,.24), rgba(201,154,110,.07) 60%, transparent 74%);
+}
+.invite-inner{position:relative}
+
+/* ---------- 探索主题入口 ---------- */
+.topic-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.topic-card{
+  display:block;width:100%;text-align:left;
+  background:var(--card);border:1px solid var(--line);
+  border-radius:var(--radius-sm);padding:14px 14px 13px;
+  transition:transform .1s ease, box-shadow .18s ease, border-color .18s ease;
+}
+.topic-card:active{transform:scale(.985)}
+.topic-card .tc-ic{color:var(--brand);margin-bottom:9px}
+.topic-card b{display:block;font-size:14.5px;line-height:1.45;font-weight:600}
+.topic-card .tc-sub{display:block;font-size:12px;color:var(--muted);margin-top:3px;line-height:1.6}
+.topic-card.seen{border-color:var(--brand-line);background:var(--brand-soft-2)}
+.topic-card.seen .tc-ic{color:var(--brand-ink)}
+
 /* ---------- 9 区地图 ---------- */
 .zonemap{
-  display:grid;grid-template-columns:repeat(3,1fr);grid-auto-rows:minmax(84px,auto);
+  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-auto-rows:minmax(84px,auto);
   gap:9px;
 }
 .zone-cell{
@@ -194,13 +428,13 @@ body.no-tab #toast{bottom:40px}
   text-decoration:none;min-height:84px;
 }
 .zone-cell.live{
-  background:linear-gradient(160deg,#eef4ef,var(--card));
-  border-color:#c9dcd2;
+  background:linear-gradient(160deg,var(--brand-soft-2),var(--card));
+  border-color:var(--brand-line);
 }
-.zc-name{font-size:13px;font-weight:600;line-height:1.35}
+.zc-name{font-size:12.5px;font-weight:600;line-height:1.35}
 .zc-count{font-size:11px;color:var(--brand-ink);margin-top:2px;font-weight:600}
-.zc-status{font-size:10px;color:#b3aca0;margin-top:2px;letter-spacing:.05em}
-.zc-status.ok{color:var(--brand)}
+.zc-status{font-size:10px;color:var(--faint);margin-top:2px;letter-spacing:.05em}
+.zc-status.ok{color:var(--brand-ink)}
 
 /* 区域详情 */
 .zone-head{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
@@ -214,18 +448,19 @@ body.no-tab #toast{bottom:40px}
 }
 .mod .dot{width:8px;height:8px;border-radius:50%;background:var(--brand);flex:none}
 .mod.soon{color:var(--muted)}
-.mod.soon .dot{background:#d8d1c3}
-.soon-tag{margin-left:auto;font-size:11px;color:#b3aca0;white-space:nowrap}
+.mod.soon .dot{background:var(--faint-2)}
+.soon-tag{margin-left:auto;font-size:11px;color:var(--faint);white-space:nowrap}
 .lessons .label{margin-top:6px}
-.coming-card{background:var(--warm-soft);border-radius:var(--radius);padding:16px 18px;border:1px solid #f0ddc9}
+.coming-card{background:var(--warm-soft);border-radius:var(--radius);padding:16px 18px;border:1px solid var(--warm-line)}
 
 /* 课程行 */
 .lesson-row{
-  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  display:flex;align-items:center;gap:11px;
   background:var(--card);border:1px solid var(--line);
-  border-radius:15px;padding:13px 14px;margin-bottom:9px;
+  border-radius:15px;padding:12px 13px;margin-bottom:9px;
+  transition:border-color .18s ease, box-shadow .18s ease;
 }
-.lesson-row.done{background:#fafaf7;border-color:#e3dfd3}
+.lesson-row.done{background:var(--done-bg);border-color:var(--done-line)}
 .lesson-row.done .lr-text b{color:var(--muted)}
 .lesson-row .lr-main{display:flex;align-items:center;gap:12px;min-width:0}
 .lr-no{
@@ -233,11 +468,17 @@ body.no-tab #toast{bottom:40px}
   display:flex;align-items:center;justify-content:center;
   font-size:13px;font-weight:700;color:var(--brand-ink);background:var(--brand-soft);
 }
-.lesson-row.done .lr-no{background:#eef0e6;color:#a6a194}
-.lr-text{min-width:0}
-.lr-text b{display:block;font-size:15px;line-height:1.4}
+.lesson-row.done .lr-no{background:var(--done-tint);color:var(--done-ink)}
+.lr-text{min-width:0;flex:1}
+.lr-text b{display:block;font-size:14.5px;line-height:1.4;font-weight:600}
 .lr-text .small{display:block;margin-top:2px}
-.lr-cta{flex:none;font-size:12px;color:var(--brand-ink);font-weight:600}
+.lr-cta{flex:none;font-size:12px;color:var(--brand-ink);font-weight:600;display:flex;align-items:center;gap:2px}
+.lr-fav{
+  flex:none;width:34px;height:34px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  color:var(--faint-2);transition:color .15s ease, background .15s ease;
+}
+.lr-fav.on{color:var(--warm)}
 
 /* ---------- 学习页 ---------- */
 .lesson-head{padding:6px 2px 8px}
@@ -248,23 +489,23 @@ body.no-tab #toast{bottom:40px}
   background:var(--brand-soft);border-radius:999px;padding:6px 12px;display:inline-block;
 }
 .stepper{display:flex;gap:8px;margin:16px 0 6px}
-.stepper .step{display:flex;align-items:center;gap:6px;font-size:12px;color:#b3aca0}
+.stepper .step{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--faint)}
 .stepper .step i{
-  width:20px;height:20px;border-radius:50%;background:#efe9dc;color:#9f988b;
+  width:20px;height:20px;border-radius:50%;background:var(--step-bg);color:var(--step-ink);
   font-style:normal;display:flex;align-items:center;justify-content:center;font-size:11px;
 }
 .stepper .step.on{color:var(--brand-ink)}
-.stepper .step.on i,.stepper .step.cur i{background:var(--brand);color:#fff}
+.stepper .step.on i,.stepper .step.cur i{background:var(--brand-ink);color:var(--on-brand)}
 .stepper .step.cur{color:var(--brand-ink);font-weight:600}
 
-.reading{font-size:16px;line-height:1.9;color:#33312c}
+.reading{font-size:16px;line-height:1.9;color:var(--reading)}
 .body-h{margin:20px 0 4px;font-size:17px;color:var(--ink);letter-spacing:.01em}
-.body-p{margin:6px 0;color:#3b3832}
+.body-p{margin:6px 0;color:var(--reading-2)}
 .case{
-  background:var(--warm-soft);border:1px solid #f0ddc9;border-left:4px solid var(--warm);
+  background:var(--warm-soft);border:1px solid var(--warm-line);border-left:4px solid var(--warm);
   border-radius:12px;padding:12px 15px;margin:16px 0;
 }
-.case-tag{display:block;font-size:11px;color:var(--warm);letter-spacing:.12em;margin-bottom:6px;font-weight:600}
+.case-tag{display:block;font-size:11px;color:var(--warm-ink);letter-spacing:.12em;margin-bottom:6px;font-weight:600}
 .action-bar{margin-top:22px}
 .card.finish .tip{margin-top:10px;background:var(--brand-soft);border-radius:12px;padding:11px 13px;font-size:13.5px;color:var(--ink-2)}
 
@@ -276,11 +517,11 @@ body.no-tab #toast{bottom:40px}
 .field .q{font-size:15px;font-weight:600;color:var(--ink)}
 .field .hint{display:block;font-size:12px;color:var(--muted);font-weight:400;margin-top:2px}
 textarea{
-  width:100%;border:1px solid var(--line);background:#fbfaf6;
+  width:100%;border:1px solid var(--line);background:var(--field);
   border-radius:12px;padding:11px 12px;font-size:14.5px;line-height:1.7;
   resize:vertical;min-height:56px;outline:none;
 }
-textarea:focus{border-color:#c4d6cb;background:#fff}
+textarea:focus{border-color:var(--brand-line);background:var(--card)}
 
 /* ---------- 画像 / 状态 ---------- */
 .state-text{font-size:15px;line-height:1.85;color:var(--ink-2);margin-top:4px}
@@ -289,29 +530,305 @@ textarea:focus{border-color:#c4d6cb;background:#fff}
 .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
 .chip{
   font-size:12.5px;color:var(--brand-ink);background:var(--brand-soft);
-  border:1px solid #d6e3da;padding:7px 12px;border-radius:999px;line-height:1.3;
+  border:1px solid var(--brand-line);padding:7px 12px;border-radius:999px;line-height:1.3;
   text-align:left;max-width:100%;
 }
 .chip.ok{background:var(--brand-soft)}
 .smallmt{margin-top:14px}
-.statgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-bottom:14px}
+.statgrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;margin-bottom:14px}
 .statgrid .stat{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:12px 4px}
 .statgrid .stat b{font-size:19px}
 
-/* 时间线 */
+/* 旧时间线（archive.js 退役后由 .tl 取代，保留以免旧引用裸奔） */
 .timeline{list-style:none;margin:6px 0 0;padding:0}
 .timeline li{
   display:flex;gap:12px;padding:10px 0;border-bottom:1px dashed var(--line);
 }
 .timeline li:last-child{border-bottom:none}
 .tl-date{flex:none;width:52px;font-size:11px;color:var(--muted);line-height:1.4;text-align:right}
-.tl-date em{display:block;font-style:normal;color:#c6bfb2}
+.tl-date em{display:block;font-style:normal;color:var(--faint-2)}
 .tl-main{min-width:0;font-size:13.5px}
 .tl-main b{font-weight:600;font-size:13.5px;color:var(--ink-2)}
 .tl-main .note{margin:2px 0 0;font-size:13px;color:var(--ink-2);white-space:pre-wrap}
 .review p{color:var(--ink-2)}
 
-/* ---------- 成长评估 ---------- */
+/* =========================================================================
+   成长轨迹时间轴（Widgets.timeline）
+   同一份数据、两种排布：.tl-v 纵向（页面/手机），.tl-h 横向（首页宽屏）。
+   横向必须自带 .tl-scroll 滚动容器，否则会把桌面栅格撑爆。
+   ========================================================================= */
+.tl{list-style:none;margin:0;padding:0}
+.tl-item{position:relative}
+.tl-dot{
+  position:absolute;width:11px;height:11px;border-radius:50%;
+  background:var(--card);border:2px solid var(--brand-line);
+}
+.tl-item.k-assessment .tl-dot{background:var(--brand);border-color:var(--brand)}
+.tl-item.k-course .tl-dot{border-color:var(--brand)}
+.tl-item.k-mood .tl-dot{background:var(--warm);border-color:var(--warm)}
+.tl-item.k-note .tl-dot{background:var(--mist);border-color:var(--mist)}
+.tl-date{display:block;font-size:11px;color:var(--muted);letter-spacing:.04em}
+.tl-title{display:block;font-size:14.5px;font-weight:600;line-height:1.5;margin-top:1px}
+.tl-quote{font-size:13px;color:var(--ink-2);margin:4px 0 0;line-height:1.7}
+
+/* 纵向 */
+.tl-v .tl-item{display:block;padding:0 0 20px 26px;min-height:46px}
+.tl-v .tl-dot{left:0;top:5px}
+.tl-v .tl-item::before{
+  content:"";position:absolute;left:5px;top:19px;bottom:-2px;
+  width:1px;background:var(--line);
+}
+.tl-v .tl-item:last-child{padding-bottom:2px}
+.tl-v .tl-item:last-child::before{display:none}
+
+/* 「横向」（.tl-h）：手机上就是纵向，≥900px 才真的横过来。
+   要求「手机端成长轨迹改为纵向」，所以 DOM 只渲染一份，靠断点切换排布，
+   而不是在 JS 里读 matchMedia 猜屏幕宽度（那样拖窗口就不会重排）。 */
+.tl-scroll{overflow:visible;margin:0;padding:0}
+.tl-h .tl-item{display:block;padding:0 0 20px 26px;min-height:46px}
+.tl-h .tl-dot{left:0;top:5px}
+.tl-h .tl-item::before{
+  content:"";position:absolute;left:5px;top:19px;bottom:-2px;width:1px;background:var(--line);
+}
+.tl-h .tl-item:last-child{padding-bottom:2px}
+.tl-h .tl-item:last-child::before{display:none}
+
+/* —— 横向时间轴只在宽屏成立 —— */
+@media (min-width:900px){
+  .tl-scroll{overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;scrollbar-width:thin}
+  .tl-scroll::-webkit-scrollbar{height:5px}
+  .tl-scroll::-webkit-scrollbar-thumb{background:var(--line);border-radius:99px}
+  /* 右边缘渐隐：卡在边界上被切一半的卡片，看起来像「坏了」，
+     渐隐之后它才读作「右边还有，可以滑」。
+     遮罩只取 alpha，--ink 是纯色，用它就不用引入新的色值。 */
+  .tl-scroll{
+    -webkit-mask-image:linear-gradient(90deg,var(--ink) calc(100% - 46px),transparent);
+    mask-image:linear-gradient(90deg,var(--ink) calc(100% - 46px),transparent);
+  }
+  .tl-h{display:flex;align-items:flex-start;padding:2px 0 8px}
+  .tl-h .tl-item{flex:0 0 auto;width:172px;padding:0 18px 0 0;min-height:96px}
+  .tl-h .tl-dot{top:3px}
+  .tl-h .tl-item::before{
+    left:0;right:0;top:8px;bottom:auto;width:auto;height:1px;background:var(--line);
+  }
+  .tl-h .tl-item:last-child{border-bottom:none;padding-bottom:0}
+  .tl-h .tl-item:last-child::before{display:block;background:linear-gradient(90deg,var(--line),transparent)}
+  .tl-h .tl-date{padding-top:20px}
+  .tl-h .tl-title{font-size:13.5px}
+  .tl-h .tl-quote{font-size:12px;color:var(--muted);margin-top:3px}
+  /* 引言长短不一时卡片底边会参差，限两行让一排看起来是齐的 */
+  .tl-h .tl-title,.tl-h .tl-quote{
+    display:-webkit-box;-webkit-box-orient:vertical;overflow:hidden;
+    -webkit-line-clamp:2;
+  }
+  .tl-h .tl-title{-webkit-line-clamp:1}
+}
+
+/* =========================================================================
+   心情曲线（手写 SVG，无图表库）
+   ========================================================================= */
+.mood-wrap{position:relative}
+.mood-curve{
+  display:block;width:100%;height:84px;color:var(--brand);
+  overflow:visible;
+}
+.mood-axis{
+  display:flex;justify-content:space-between;
+  font-size:11px;color:var(--muted);margin-top:2px;letter-spacing:.03em;
+}
+.mood-empty{
+  display:flex;align-items:center;justify-content:center;
+  height:84px;border-radius:var(--radius-sm);
+  background:var(--bg-2);color:var(--muted);font-size:12.5px;
+  text-align:center;padding:0 14px;line-height:1.7;
+}
+
+/* 心情选择器 */
+.mood-pick{display:flex;gap:7px;margin:10px 0 2px}
+.mood-btn{
+  flex:1;min-width:0;padding:11px 0 9px;border-radius:var(--radius-sm);
+  border:1px solid var(--line);background:var(--field);
+  display:flex;flex-direction:column;align-items:center;gap:4px;
+  color:var(--muted);transition:all .15s ease;
+}
+.mood-btn .ic{color:var(--faint)}
+.mood-btn span{font-size:11px}
+.mood-btn.on{background:var(--brand-soft);border-color:var(--brand);color:var(--brand-ink);font-weight:600}
+.mood-btn.on .ic{color:var(--brand-ink)}
+
+/* 今日小记 */
+.note-box{position:relative}
+.note-box textarea{min-height:88px}
+.note-foot{
+  display:flex;align-items:center;justify-content:space-between;
+  gap:10px;margin-top:9px;
+}
+.note-hint{font-size:11.5px;color:var(--faint)}
+.note-foot .btn{min-height:38px;padding:0 18px;font-size:13.5px}
+
+/* 记录条目（记录页 / 我的） */
+.rec-item{
+  display:flex;align-items:flex-start;gap:11px;
+  padding:13px 14px;background:var(--card);border:1px solid var(--line);
+  border-radius:var(--radius-sm);margin-bottom:9px;
+  transition:border-color .18s ease, box-shadow .18s ease;
+}
+.rec-item .ri-ic{flex:none;color:var(--brand);padding-top:2px}
+.rec-item .ri-body{min-width:0;flex:1}
+.rec-item .ri-body b{display:block;font-size:14px;font-weight:600;line-height:1.5}
+.rec-item .ri-body p{margin:3px 0 0;font-size:12.5px;color:var(--muted);line-height:1.65}
+.rec-item .ri-body .when{font-size:11px;color:var(--faint);letter-spacing:.03em}
+.rec-item.k-mood .ri-ic{color:var(--warm)}
+.rec-item.k-note .ri-ic{color:var(--mist-ink)}
+
+/* 空状态：有内容、有指引，不是一片空白 */
+.empty{
+  text-align:center;padding:34px 22px;
+  background:var(--card);border:1px dashed var(--line);
+  border-radius:var(--radius);color:var(--muted);
+}
+.empty .ic{margin:0 auto 12px;color:var(--faint-2)}
+.empty b{display:block;font-size:14.5px;color:var(--ink-2);font-weight:600;margin-bottom:5px}
+.empty p{font-size:13px;margin:0;line-height:1.75}
+.empty .btn{margin-top:16px}
+
+/* ---------- 我的 ---------- */
+.me-head{
+  display:flex;align-items:center;gap:14px;margin:4px 2px 18px;
+}
+.me-avatar{
+  flex:none;width:58px;height:58px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(150deg,var(--brand-soft),var(--mist-soft));
+  border:1px solid var(--brand-line);color:var(--brand-ink);
+  font-size:20px;font-weight:700;
+}
+.me-head h1{margin:0;font-size:19px;line-height:1.4}
+.me-head .sub{font-size:12.5px;color:var(--muted);margin:3px 0 0}
+.set-row{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding:14px 0;border-bottom:1px solid var(--line-2);
+}
+.set-row:last-child{border-bottom:none}
+.set-row .sr-label{font-size:14.5px}
+.set-row .sr-label small{display:block;font-size:11.5px;color:var(--muted);margin-top:2px;line-height:1.6}
+.set-row .sr-val{font-size:13px;color:var(--muted);flex:none}
+
+/* 开关 */
+.switch{
+  flex:none;width:46px;height:27px;border-radius:99px;background:var(--track);
+  position:relative;transition:background .18s ease;
+}
+.switch::after{
+  content:"";position:absolute;left:3px;top:3px;width:21px;height:21px;border-radius:50%;
+  background:var(--card);box-shadow:0 1px 3px rgba(70,62,50,.18);transition:transform .18s ease;
+}
+.switch.on{background:var(--brand)}
+.switch.on::after{transform:translateX(19px)}
+
+/* ---------- 15 题 ---------- */
+.q-flow{max-width:var(--maxw);margin:0 auto}
+.q-bar{
+  height:2px;background:var(--track);border-radius:99px;overflow:hidden;margin:2px 0 22px;
+}
+.q-bar i{display:block;height:100%;background:var(--brand);border-radius:99px;transition:width .3s ease}
+.q-count{
+  font-size:11.5px;letter-spacing:.18em;color:var(--muted);
+  margin:0 0 10px;font-weight:600;
+}
+.q-text{font-size:19px;font-weight:600;line-height:1.65;margin:0 0 6px;letter-spacing:.01em}
+.q-hint{font-size:12.5px;color:var(--muted);margin:8px 0 20px;line-height:1.7}
+.q-opts{display:flex;flex-direction:column;gap:9px}
+.q-opt{
+  display:flex;align-items:flex-start;gap:11px;text-align:left;
+  width:100%;padding:15px 15px;border-radius:var(--radius-sm);
+  background:var(--card);border:1px solid var(--line);
+  font-size:14.5px;line-height:1.65;color:var(--ink);
+  transition:border-color .15s ease, background .15s ease, transform .08s ease;
+}
+.q-opt:active{transform:scale(.99)}
+.q-opt .q-key{
+  flex:none;width:22px;height:22px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:11.5px;font-weight:700;
+  background:var(--bg-2);color:var(--muted);
+}
+.q-opt.on{border-color:var(--brand);background:var(--brand-soft)}
+.q-opt.on .q-key{background:var(--brand-ink);color:var(--on-brand)}
+.q-text-input{width:100%;min-height:96px}
+.q-nav{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:22px}
+.q-nav .link{padding:10px 4px}
+
+/* 完成页 */
+.done-head{text-align:center;padding:14px 4px 6px}
+.done-head h2{font-size:23px;margin:10px 0 6px;line-height:1.4}
+.done-head p{font-size:13.5px;color:var(--ink-2);margin:0;line-height:1.8}
+.done-mark{
+  width:62px;height:62px;border-radius:50%;margin:0 auto 6px;
+  display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(150deg,var(--brand-soft),var(--mist-soft));
+  color:var(--brand-ink);border:1px solid var(--brand-line);
+}
+.rec-sec{margin:0 0 16px}
+.rec-sec h3{
+  font-size:12px;letter-spacing:.14em;color:var(--muted);
+  margin:0 0 7px;font-weight:600;
+}
+.rec-sec p{margin:0;font-size:14.5px;line-height:1.85;color:var(--ink-2)}
+.rec-sec.quote p{
+  font-size:15px;color:var(--ink);background:var(--brand-soft-2);
+  border-left:3px solid var(--brand-line);border-radius:0 12px 12px 0;
+  padding:12px 15px;line-height:1.85;
+}
+.rec-dims{display:flex;flex-wrap:wrap;gap:7px;margin-top:2px}
+
+/* =========================================================================
+   右栏卡片 / 手机内联卡片
+   同一份 HTML 渲染两遍：手机放在正文流末尾（#view 内），
+   ≥1180px 时手机那份 display:none、右栏那份出现。
+   所以 .rail-card 必须是【全局】样式，不能只写在 1180 断点里。
+   ========================================================================= */
+.rail-card{
+  background:var(--card);border:1px solid var(--line);
+  border-radius:var(--radius);box-shadow:var(--shadow);
+  padding:16px 16px;margin-bottom:14px;
+}
+.rail-card h4{
+  margin:0 0 10px;font-size:12.5px;font-weight:600;
+  letter-spacing:.06em;color:var(--ink-2);
+  display:flex;align-items:center;gap:6px;
+}
+.rail-card h4 .ic{color:var(--faint)}
+.rail-card .rail-note{font-size:12px;color:var(--muted);line-height:1.7;margin:8px 0 0}
+.rail-card .statrow{margin-top:0}
+.rail-quiet{
+  font-size:12px;color:var(--faint);line-height:1.9;
+  padding:6px 4px 0;text-align:center;
+}
+.rail-mobile{margin-top:4px}
+
+/* ---------- 昵称 ---------- */
+.nick-wrap{max-width:440px;margin:0 auto;padding-top:22px}
+.nick-mark{
+  width:64px;height:64px;border-radius:50%;margin:0 auto 18px;
+  display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(150deg,var(--brand-soft),var(--warm-soft));
+  color:var(--brand-ink);border:1px solid var(--brand-line);
+}
+.nick-wrap h2{font-size:22px;margin:0 0 8px;text-align:center;line-height:1.45}
+.nick-wrap .nick-sub{
+  font-size:13.5px;color:var(--ink-2);text-align:center;
+  margin:0 0 22px;line-height:1.8;
+}
+.nick-wrap input{
+  width:100%;border:1px solid var(--line);background:var(--field);
+  border-radius:14px;padding:14px 15px;font-size:16px;outline:none;
+  text-align:center;letter-spacing:.04em;
+}
+.nick-wrap input:focus{border-color:var(--brand-line);background:var(--card)}
+.nick-wrap .btn{margin-top:16px}
+
+/* ---------- 成长评估（旧 5 题，退役中，样式保留） ---------- */
 .assess .page-intro{font-size:15px;line-height:1.8}
 .assess-top{text-align:center;margin:6px 0 4px}
 .assess-top h2{font-size:22px;margin:8px 0 2px}
@@ -320,54 +837,211 @@ textarea:focus{border-color:#c4d6cb;background:#fff}
   margin:6px 2px 14px;
 }
 .aq{padding-top:16px}
-.aq-no{font-size:11px;color:var(--warm);letter-spacing:.2em;margin:0}
+.aq-no{font-size:11px;color:var(--warm-ink);letter-spacing:.2em;margin:0}
 .aq-text{font-size:15.5px;font-weight:600;margin:4px 0 12px;line-height:1.6}
 .scale{display:flex;gap:6px}
 .sc{
   flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;
   padding:8px 0 6px;border:1px solid var(--line);border-radius:12px;
-  background:#fbfaf6;font-size:10px;color:var(--muted);
+  background:var(--field);font-size:10px;color:var(--muted);
 }
 .sc b{font-size:15px;color:var(--ink-2)}
-.sc.on{background:var(--brand);border-color:var(--brand)}
-.sc.on b,.sc.on span{color:#fff}
+.sc.on{background:var(--brand-ink);border-color:var(--brand-ink)}
+.sc.on b,.sc.on span{color:var(--on-brand)}
 
+/* =========================================================================
+   断点
+   ========================================================================= */
 @media (min-width:600px){
   body{background:
-    radial-gradient(1200px 600px at 15% -10%, #ece8dd 0, transparent 60%),
-    var(--bg);}
+    radial-gradient(1200px 600px at 15% -10%, var(--glow) 0, transparent 60%),
+    var(--bg);
+    background-attachment:fixed;}
 }
+
+/* —— 左栏出现：桌面形态 —— */
+@media (min-width:900px){
+  #app{
+    display:grid;
+    /* minmax(0,1fr) 不是 1fr：1fr 等于 minmax(auto,1fr)，不会收缩到内容宽度以下，
+       横向时间轴会把整页撑出横向滚动条 */
+    grid-template-columns:var(--rail-w) minmax(0,1fr);
+    gap:0 30px;
+    max-width:1140px;
+    margin:0 auto;
+    padding:0 26px;
+    align-items:start;
+  }
+  #rail{
+    display:flex;flex-direction:column;
+    position:sticky;top:0;height:100vh;
+    /* dvh：100vh 会把 iOS 地址栏那块也算进去，左侧栏因此比屏幕高出一截，
+       底部「不是变成更好的人…」那句会被推到看不见的地方 */
+    height:100dvh;
+    padding:28px 0 26px;overflow-y:auto;
+  }
+  #rail2{display:none}
+  #tabbar{display:none}
+  /* 示例模式：横幅把左栏整体推下来（详见 #demoBar 那段） */
+  body.demo-on #rail{top:var(--demoh);height:calc(100dvh - var(--demoh))}
+  main#view{max-width:none;margin:0;padding:6px 0 72px}
+
+  /* 顶栏在桌面降为一条细面包屑，但【位置不变】—— #btnBack 仍是返回的唯一入口 */
+  #topbar{
+    height:52px;justify-content:flex-start;
+    padding:0 0;
+    background:var(--bg);
+    background:color-mix(in srgb, var(--bg) 86%, transparent);
+  }
+  #pageTitle{font-size:12.5px;font-weight:500;letter-spacing:.18em;color:var(--muted)}
+  #btnBack{
+    position:static;transform:none;width:auto;height:34px;
+    padding:0 14px 0 10px;margin-right:6px;border-radius:99px;
+    font-size:17px;line-height:1;background:var(--card);border:1px solid var(--line);
+  }
+  #btnBack .bb-label{display:inline;margin-left:5px}
+
+  /* 桌面侧栏导航 */
+  #railNav{display:block;padding:0 4px}
+  #railNav .tab{
+    width:100%;height:42px;justify-content:flex-start;gap:11px;
+    padding:0 13px;border-radius:12px;font-size:14px;margin-bottom:2px;
+    font-weight:500;
+  }
+  #railNav .tab .ic{color:var(--faint)}
+  #railNav .tab.on{background:var(--brand-soft);color:var(--brand-ink);font-weight:600}
+  #railNav .tab.on .ic{color:var(--brand-ink)}
+
+  #toast{bottom:44px}
+  .topic-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .tl-scroll{margin:0;padding:0}
+}
+
+/* —— 右栏出现：三栏 —— */
+@media (min-width:1180px){
+  #app{
+    grid-template-columns:var(--rail-w) minmax(0,1fr) var(--rail2-w);
+    gap:0 34px;
+    max-width:1400px;
+    padding:0 34px;
+  }
+  #rail2{
+    display:block;
+    position:sticky;top:0;align-self:start;
+    padding:28px 0 26px;
+    max-height:100vh;overflow-y:auto;
+    max-height:100dvh;                /* 同上，见 #rail 的说明 */
+  }
+  /* 示例模式：横幅把右栏一起推下来（详见 #demoBar 那段） */
+  body.demo-on #rail2{top:var(--demoh);max-height:calc(100dvh - var(--demoh))}
+  /* 右栏出现后，正文里那份内联副本让位 */
+  .rail-mobile{display:none}
+  .rail-inline>*:last-child{margin-bottom:0}
+
+  /* 右栏只有 300px（卡片内宽 262px），空间比正文窄得多 ——
+     这几条只对右栏生效，正文里那份内联副本仍然用默认（更宽松）的排版。 */
+  #rail2 .mood-pick{gap:5px}
+  #rail2 .mood-btn{padding:10px 0 8px}
+  #rail2 .mood-btn .ic{width:20px;height:20px}
+  #rail2 .mood-btn span{font-size:10.5px}
+  #rail2 .lesson-row{padding:11px 12px;gap:9px}
+  #rail2 .lesson-row .lr-main{gap:9px}
+  #rail2 .lr-no{width:30px;height:30px;font-size:12px}
+  #rail2 .lr-text b{font-size:13.5px;line-height:1.45}
+}
+
 @media (max-width:360px){
-  .hero-q{font-size:24px}
-  .statgrid{grid-template-columns:repeat(2,1fr)}
+  .hero-q{font-size:22px}
+  .invite h2{font-size:19px}
+  .statgrid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .topic-grid{grid-template-columns:minmax(0,1fr)}
+  main#view{padding-left:16px;padding-right:16px}
+  .tl-scroll{margin:0 -16px;padding:0 16px}
+  .q-text{font-size:17.5px}
+}
+
+/* ---------- 「先看看示例」入口 ---------- */
+.nick-alt{display:flex;align-items:center;justify-content:center;gap:10px}
+.nick-sep{color:var(--faint-2);font-size:12px}
+.empty-alt{font-size:12.5px;color:var(--muted);margin:12px 0 0}
+
+/* ---------- 悬停态 ----------
+   全部集中在这里，而且只对真的有指针的设备生效。
+
+   为什么必须包起来：iOS 上点一下会同时触发 hover，而且【不会自动退掉】——
+   点过的心情按钮会一直留着一圈加深的边框，看起来像坏了。
+   鼠标设备上这些反馈是好的，所以不是删掉，是加条件。
+   （放在文件末尾而不是各回各家：这条规则本身就是一句话的事，
+     拆成八处反而看不出「所有悬停态都受同一个条件约束」。）
+
+   注意 :not(.on)：这三条原本散在各自的 .on 规则【之前】，
+   挪到文件末尾后源码顺序反了过来，同权重下悬停会盖掉选中态 ——
+   鼠标划过当前页签，页签会从「选中」变成「未选中」的样子。
+   :not(.on) 既修好这个，也正好是这个规则本来想说的意思。 */
+@media (hover:hover){
+  .topic-card:hover{border-color:var(--brand-line);box-shadow:var(--shadow-lift)}
+  .lesson-row:hover{border-color:var(--brand-line);box-shadow:var(--shadow)}
+  .lr-fav:hover{background:var(--tint)}
+  .mood-btn:not(.on):hover{border-color:var(--brand-line)}
+  .rec-item:hover{border-color:var(--brand-line);box-shadow:var(--shadow)}
+  .q-opt:not(.on):hover{border-color:var(--brand-line);background:var(--brand-soft-2)}
+  #btnBack:hover{border-color:var(--brand-line);color:var(--brand-ink)}
+  #railNav .tab:not(.on):hover{background:var(--bg-2);color:var(--ink-2)}
 }
 </style>
 </head>
 <body>
 
-  <!-- 顶栏 -->
-  <header id="topbar">
-    <button id="btnBack" class="iconbtn back" aria-label="返回" hidden>‹</button>
-    <div id="pageTitle">成长空间</div>
-  </header>
+<!-- 示例模式横幅。平时 hidden，进示例模式时由 app.js 打开。
+     放在 #app 外面：它是 fixed 定位，留在里面会变成栅格的一个格子 -->
+<div id="demoBar" hidden>
+  <span class="db-text">示例模式 · 这些不是你写的内容</span>
+  <button id="demoExit" type="button">开始写我自己的</button>
+</div>
 
-  <!-- 页面内容 -->
-  <main id="view"></main>
+<div id="app">
 
-  <!-- 底部导航 -->
-  <nav id="tabbar">
-    <button class="tab" data-nav="home">首页</button>
-    <button class="tab" data-nav="route">路线</button>
-    <button class="tab" data-nav="course">课程</button>
-    <button class="tab" data-nav="practice">练习</button>
-    <button class="tab" data-nav="archive">我的</button>
-  </nav>
+  <!-- 桌面端侧边栏（< 900px 隐藏） -->
+  <aside id="rail">
+    <div class="rail-logo">
+      <span class="rl-mark" aria-hidden="true">
+        <svg viewBox="0 0 32 32" width="30" height="30" fill="none" stroke="currentColor"
+             stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="16" cy="16" r="11.2"/>
+          <path d="M16 21.6v-5.4"/>
+          <path d="M16 16.2c0-2.6-2-4.6-4.6-4.6 0 2.6 2 4.6 4.6 4.6z"/>
+          <path d="M16 16.2c0-2.6 2-4.6 4.6-4.6 0 2.6-2 4.6-4.6 4.6z"/>
+        </svg>
+      </span>
+      <span class="rl-text">成长空间<em>Grow at your own pace</em></span>
+    </div>
 
-  <!-- 轻提示 -->
-  <div id="toast" role="status"></div>
+    <nav id="railNav" class="rail-nav" aria-label="主导航"></nav>
 
-  <!-- 核心层 -->
-  <script>
+    <p class="rail-quote">不是变成更好的人，<br>而是成为更真实的自己。</p>
+  </aside>
+
+  <!-- 主列 -->
+  <div id="colmain">
+    <header id="topbar">
+      <button id="btnBack" class="iconbtn back" aria-label="返回" hidden>‹<span class="bb-label">返回</span></button>
+      <div id="pageTitle">成长空间</div>
+    </header>
+    <main id="view"></main>
+  </div>
+
+  <!-- 宽屏右栏（容器在外壳，内容由页面通过 rail 钩子填） -->
+  <aside id="rail2"></aside>
+
+</div>
+
+<!-- 手机端底部导航（≥ 900px 隐藏）。按钮由 Router.init() 生成，不在这里手写 -->
+<nav id="tabbar" aria-label="主导航"></nav>
+
+<div id="toast" role="status"></div>
+
+<!-- 核心层 -->
+<script>
 /* =========================================================================
  * 成长空间 · 通用 UI 小工具（无依赖）
  * ========================================================================= */
@@ -429,14 +1103,115 @@ textarea:focus{border-color:#c4d6cb;background:#fff}
     toastTimer = setTimeout(function () { t.classList.remove("show"); }, 1800);
   }
 
+  /* 课程序号：两位补零的唯一入口。
+     以前散在 course.js 的 ('0' + order) 与 route.js 的 (order < 10 ? "0" : "")，
+     课程超过 9 节后会渲染成 "010"，收拢到这里统一处理。 */
+  function courseNo(n) {
+    n = Number(n) || 0;
+    return (n < 10 ? "0" : "") + n;
+  }
+
+  var WEEK = ["周日", "周一", "周二", "周三", "周四", "周五", "周六"];
+  function weekday(dateStr) {
+    var d = dateStr ? new Date(dateStr + "T00:00:00") : new Date();
+    return WEEK[d.getDay()];
+  }
+
+  /* 2026.09.17 —— 参考图里日期都用点分隔 */
+  function dotDate(dateStr) {
+    var p = String(dateStr || today()).split("-");
+    if (p.length < 3) return dateStr || "";
+    return p[0] + "." + p[1] + "." + p[2];
+  }
+
+  /* 图标：转发给 ICONS，ICONS 未加载时安全降级为空串 */
+  function icon(name, size) {
+    return (window.ICONS && window.ICONS.icon) ? window.ICONS.icon(name, size) : "";
+  }
+
+  /* 转义后保留换行（用户写的多行文本、记录正文用） */
+  function textLines(s) {
+    return esc(s).replace(/\n/g, "<br>");
+  }
+
   window.UI = {
     $: $, $all: $all, el: el, esc: esc,
     today: today, pad: pad, dateToStr: dateToStr, dayBefore: dayBefore,
-    friendlyDate: friendlyDate, friendlyTime: friendlyTime, toast: toast
+    friendlyDate: friendlyDate, friendlyTime: friendlyTime, toast: toast,
+    courseNo: courseNo, weekday: weekday, dotDate: dotDate,
+    icon: icon, textLines: textLines
   };
 })();
 </script>
-  <script>
+<script>
+/* =========================================================================
+ * 成长空间 · 图标集（全部手写内联 SVG）
+ * -------------------------------------------------------------------------
+ * 风格约定：细线条、小尺寸、圆润、低饱和、轻微手绘感。
+ * 颜色一律用 stroke="currentColor"，跟随 CSS 变量，换色板时自动跟随。
+ *
+ * 刻意不使用：彩色 Emoji、粗大的系统图标、AI 3D、发光、紫色科技渐变。
+ * 自然元素只用：新芽、叶片、细枝、山、水、云、月相、圆环、轨迹。
+ * ========================================================================= */
+(function () {
+  "use strict";
+
+  var PATHS = {
+    /* 导航 */
+    home:    '<path d="M4 10.6 12 4.4l8 6.2V19a1.2 1.2 0 0 1-1.2 1.2h-3.6v-5.5H8.8v5.5H5.2A1.2 1.2 0 0 1 4 19z"/>',
+    path:    '<path d="M4.2 16.4c3-1.2 3.9-7.2 7-7.2 3 0 3.9 4.9 6.9 3.9"/><circle cx="6.6" cy="14.5" r="1.5"/><circle cx="17.4" cy="13.4" r="1.5"/>',
+    pen:     '<path d="M4 20l1-4.2L15.8 5a2 2 0 0 1 2.8 0l.4.4a2 2 0 0 1 0 2.8L8.2 19z"/><path d="M14.3 6.5l3.2 3.2"/>',
+    compass: '<circle cx="12" cy="12" r="8.2"/><path d="M15.3 8.7 13.7 13.7 8.7 15.3l1.6-5z"/>',
+    user:    '<circle cx="12" cy="8.5" r="3.4"/><path d="M5.3 19.5c.9-3.3 3.6-5.1 6.7-5.1s5.8 1.8 6.7 5.1"/>',
+
+    /* 自然元素 */
+    sprout:  '<path d="M12 20.2v-7.4"/><path d="M12 12.8c0-3.3-2.5-5.8-5.8-5.8 0 3.3 2.5 5.8 5.8 5.8z"/><path d="M12 12.8c0-3.3 2.5-5.8 5.8-5.8 0 3.3-2.5 5.8-5.8 5.8z"/>',
+    leaf:    '<path d="M19.2 4.8c-7.6 0-12.1 3.3-12.1 8.5 0 2.2 1.5 3.9 3.6 3.9 5.7 0 8.5-5.3 8.5-12.4z"/><path d="M6.6 19.6C9.1 15.1 12.6 12 16.1 9.9"/>',
+    branch:  '<path d="M5 19.2 18.2 6"/><path d="M11.4 12.8 9.8 8.5"/><path d="M14.8 9.4 13.2 5.1"/>',
+    mountain:'<path d="M3 18.6 9.9 7.8l3.2 4.9L15.6 9l5.4 9.6z"/>',
+    water:   '<path d="M3 9.6c2.2 0 2.2 1.6 4.4 1.6s2.2-1.6 4.4-1.6 2.2 1.6 4.4 1.6 2.2-1.6 4.4-1.6"/><path d="M3 15.1c2.2 0 2.2 1.6 4.4 1.6s2.2-1.6 4.4-1.6 2.2 1.6 4.4 1.6 2.2-1.6 4.4-1.6"/>',
+    cloud:   '<path d="M7.3 17.6h9.5a3.7 3.7 0 0 0 .3-7.4 5.1 5.1 0 0 0-9.8-.9 3.9 3.9 0 0 0 0 8.3z"/>',
+    moon:    '<path d="M15.6 3.5a8.5 8.5 0 1 0 4.9 15.3 9 9 0 0 1-4.9-15.3z"/>',
+    ring:    '<circle cx="12" cy="12" r="7.7"/><circle cx="12" cy="12" r="3"/>',
+
+    /* 功能 */
+    bell:    '<path d="M6.6 16.6V11a5.4 5.4 0 0 1 10.8 0v5.6l1.4 2.1H5.2z"/><path d="M10.4 18.7a1.8 1.8 0 0 0 3.2 0"/>',
+    star:    '<path d="M12 4.4l2.4 5 5.5.8-4 3.9 1 5.4-4.9-2.7-4.9 2.7 1-5.4-4-3.9 5.5-.8z"/>',
+    heart:   '<path d="M12 19.7S4.4 15 4.4 9.9A4 4 0 0 1 12 7.4a4 4 0 0 1 7.6 2.5c0 5.1-7.6 9.8-7.6 9.8z"/>',
+    book:    '<path d="M4.6 5.6a2 2 0 0 1 2-2h12.4v14.8H6.6a2 2 0 0 0-2 2z"/><path d="M4.6 5.6v14.8"/>',
+    arrow:   '<path d="M4.8 12h13.4"/><path d="M13.2 7l5 5-5 5"/>',
+    plus:    '<path d="M12 5.4v13.2"/><path d="M5.4 12h13.2"/>',
+    check:   '<path d="M5.4 12.6l4.4 4.4 8.8-9.6"/>',
+    chevron: '<path d="M9.5 5.8 15.7 12l-6.2 6.2"/>',
+    quote:   '<path d="M9.6 6.4C6.9 7.7 5.4 9.9 5.4 12.8v4.8h5V12h-3c0-2 .9-3.4 2.9-4.3z"/><path d="M19.2 6.4c-2.7 1.3-4.2 3.5-4.2 6.4v4.8h5V12h-3c0-2 .9-3.4 2.9-4.3z"/>',
+
+    /* 心情五档，从低落到很好，全部线条图形，不用 emoji。
+       嘴部弧线方向就是情绪方向：sweep 0 = 向下弯（笑），sweep 1 = 向上弯（低落）。 */
+    mood1:   '<circle cx="12" cy="12" r="8.2"/><path d="M8.6 16.6a4.4 4.4 0 0 1 6.8 0"/><path d="M9.4 9.8h.02"/><path d="M14.6 9.8h.02"/>',
+    mood2:   '<circle cx="12" cy="12" r="8.2"/><path d="M9.6 15.4a2.6 2.6 0 0 1 4.8 0"/><path d="M9.4 9.8h.02"/><path d="M14.6 9.8h.02"/>',
+    mood3:   '<circle cx="12" cy="12" r="8.2"/><path d="M9.4 15.2h5.2"/><path d="M9.4 9.8h.02"/><path d="M14.6 9.8h.02"/>',
+    mood4:   '<circle cx="12" cy="12" r="8.2"/><path d="M9.6 14.4a2.6 2.6 0 0 0 4.8 0"/><path d="M9.4 9.8h.02"/><path d="M14.6 9.8h.02"/>',
+    mood5:   '<circle cx="12" cy="12" r="8.2"/><path d="M8.8 14.2a4 4 0 0 0 6.4 0"/><path d="M9.4 9.8h.02"/><path d="M14.6 9.8h.02"/>'
+  };
+
+  /**
+   * 取一个图标的 SVG 字符串。
+   * @param {string} name  PATHS 里的键
+   * @param {number} [size] 边长，默认 18
+   */
+  function icon(name, size) {
+    var d = PATHS[name];
+    if (!d) return "";
+    var s = size || 18;
+    return '<svg class="ic" viewBox="0 0 24 24" width="' + s + '" height="' + s + '" ' +
+      'fill="none" stroke="currentColor" stroke-width="1.5" ' +
+      'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + d + "</svg>";
+  }
+
+  window.ICONS = { paths: PATHS, icon: icon };
+})();
+</script>
+<script>
 /* =========================================================================
  * 成长空间 · 本地数据层（LocalStorage，key 前缀 gs.）
  * 所有用户数据只保存在当前浏览器里，不联网、不上传。
@@ -445,16 +1220,39 @@ textarea:focus{border-color:#c4d6cb;background:#fff}
   "use strict";
 
   var PREFIX = "gs.";
-  var KEYS = { profile: "profile", progress: "progress", journal: "journal", practices: "practices" };
+  var KEYS = {
+    profile: "profile", progress: "progress", journal: "journal", practices: "practices",
+    favorites: "favorites", settings: "settings"
+  };
+
+  /* ---- 示例模式 ---------------------------------------------------------
+     非 null 时，读写全部改道到这个内存对象，LocalStorage 一次都不碰。
+     这两个函数是整个 App 唯一的存储出入口，所以只在这里拦一次，
+     十个页面就都进了示例模式，不需要每个页面各写一份示例分支。
+
+     为什么是「可写的内存副本」而不是「只读」：
+       只读的话，朋友点一下心情、写一句小记都没反应，会以为坏了；
+       而写进真实存储又会污染他自己的数据。
+       内存副本两头都占：点得动，退出即消失。
+
+     为什么它同时是 iOS 的兜底：
+       iOS 上 localStorage 有可能整个不可用。那种情况下普通模式是
+       「能用但存不住」，而示例模式本来就不用存储，反而是完整的。 */
+  var demoState = null;
 
   function raw(k) { return PREFIX + k; }
   function loadJson(k, def) {
+    if (demoState) {
+      var d = demoState[k];
+      return d === undefined ? def : d;
+    }
     try {
       var v = JSON.parse(localStorage.getItem(raw(k)));
       return v == null ? def : v;
     } catch (e) { return def; }
   }
   function saveJson(k, v) {
+    if (demoState) { demoState[k] = v; return; }
     try { localStorage.setItem(raw(k), JSON.stringify(v)); } catch (e) { /* 隐私/容量异常时静默 */ }
   }
 
@@ -479,16 +1277,19 @@ textarea:focus{border-color:#c4d6cb;background:#fff}
     saveProgress(p);
   }
 
-  /* 新增一条成长记录（时间线用）。type: assessment / course / practice */
+  /* 新增一条成长记录（时间线用）。type: assessment / course / practice
+     返回写入的那一条 —— 完成页要拿它的 id 跳去「回看完整记录」。 */
   function addJournal(type, note, meta) {
     var j = journal();
     var d = new Date();
-    j.push({
+    var e = {
       id: "j" + d.getTime() + Math.floor(Math.random() * 1000),
       date: UI.today(), ts: d.getTime(), type: type, note: note || "", meta: meta || {}
-    });
+    };
+    j.push(e);
     j.sort(function (a, b) { return a.ts - b.ts; });
     saveJson(KEYS.journal, j);
+    return e;
   }
 
   /* 记录一次“今日练习” */
@@ -525,6 +1326,218 @@ textarea:focus{border-color:#c4d6cb;background:#fff}
     return c ? c.title : "";
   }
 
+  /* =======================================================================
+   * 昵称（存在 profile 里，不另开 key）
+   * ===================================================================== */
+  function nickname() {
+    var p = getProfile();
+    return (p && p.nickname) || "";
+  }
+  /* 保存昵称。注意【不要】顺手把 done 设成 true —— 昵称和自评是两件事 */
+  function saveNickname(n) {
+    var p = getProfile() || { done: false, startedAt: Date.now() };
+    p.nickname = String(n == null ? "" : n).replace(/^\s+|\s+$/g, "").slice(0, 12);
+    p.nicknameSetAt = Date.now();
+    saveProfile(p);
+    return p.nickname;
+  }
+
+  /* =======================================================================
+   * 今日小记 / 心情
+   * 都写进 journal（它本就是按时序追加的行为流，streak / thisWeek 都从它派生），
+   * 但【每天一条】—— 所以走 upsertToday，避免改主意重写时留下两条。
+   * ===================================================================== */
+  function upsertToday(type, note, meta) {
+    var j = journal(), td = UI.today(), i;
+    for (i = 0; i < j.length; i++) {
+      if (j[i].type === type && j[i].date === td) {
+        j[i].note = note || "";
+        j[i].meta = meta || {};
+        j[i].ts = Date.now();
+        saveJson(KEYS.journal, j);
+        return false;             /* 改写，不是新建 */
+      }
+    }
+    addJournal(type, note, meta);  /* 复用现有函数，排序逻辑一起复用 */
+    return true;                   /* 新建 */
+  }
+
+  function todayEntry(type) {
+    var j = journal(), td = UI.today();
+    for (var i = j.length - 1; i >= 0; i--) {
+      if (j[i].type === type && j[i].date === td) return j[i];
+    }
+    return null;
+  }
+
+  function saveDailyNote(text) {
+    return upsertToday("note", String(text == null ? "" : text).replace(/^\s+|\s+$/g, ""), {});
+  }
+  function saveMood(moodId, score, label) {
+    return upsertToday("mood", "", { moodId: moodId, score: score, label: label || "" });
+  }
+
+  /* 近 N 天心情序列；没记录的日子是 null（曲线断开，不连线） */
+  function moodSeries(days) {
+    days = days || 14;
+    var j = journal(), map = {}, i;
+    for (i = 0; i < j.length; i++) {
+      if (j[i].type === "mood" && j[i].meta && j[i].meta.score) map[j[i].date] = j[i].meta.score;
+    }
+    var out = [], cur = UI.today();
+    for (i = 0; i < days; i++) {
+      out.unshift({ date: cur, score: map[cur] || null });
+      cur = UI.dayBefore(cur);
+    }
+    return out;
+  }
+
+  /* 按类型取记录，新的在前 */
+  function entries(type) {
+    var j = journal(), out = [];
+    for (var i = j.length - 1; i >= 0; i--) if (j[i].type === type) out.push(j[i]);
+    return out;
+  }
+
+  /* =======================================================================
+   * journal -> 时间轴展示项
+   * 首页和「成长轨迹」读的是同一份映射，不是两份要同步维护的代码。
+   *
+   * opts.maxMood：只在【摘要】里限制心情条目的条数（-1 = 不限，默认）。
+   *
+   * 为什么需要它：心情每天都能记，小记和课程不是。记得越勤，摘要就越被
+   * 「心情 · 还不错」这种没有内容的行占满，而完成一节课、写下的一句话
+   * 全被挤到看不见的地方 —— 那正好和这条时间轴的意义相反。
+   *
+   * 为什么是「限制总数」而不是「不许连着出两条」：
+   *   试过后者。示例数据是心情与小记交替的，连着出的规则会把
+   *   心情 · 小记 · 心情 · 小记 一路放行，8 条里仍然有 4 条是心情，
+   *   两节已完成的课照样进不来 —— 等于没治。限总数才真的把位置让出来。
+   *
+   * 「成长轨迹」页取的是全量（limit=0），一条不删、不做任何取舍。
+   * ===================================================================== */
+  function timelineItems(limit, opts) {
+    var maxMood = (opts && opts.maxMood !== undefined) ? opts.maxMood : -1;
+    var moods = 0;
+    var j = journal(), out = [];
+    for (var i = j.length - 1; i >= 0; i--) {
+      var e = j[i], meta = e.meta || {}, item;
+      var k;
+
+      if (e.type === "assessment") {
+        var rec = meta.record;
+        item = {
+          title: e.note || (rec ? rec.title : "认识自己"),
+          quote: rec ? rec.quote : "",
+          kind: "assessment",
+          /* 只有那条《第一次认识自己》可点开回看 */
+          refId: meta.kind === "first-self" ? e.id : ""
+        };
+      } else if (e.type === "course") {
+        var rs = meta.reflections || [], q = "";
+        for (k = 0; k < rs.length; k++) {
+          if (rs[k] && rs[k].a) { q = rs[k].a; break; }
+        }
+        item = { title: e.note || "完成了一节课", quote: q, kind: "course", refId: "" };
+      } else if (e.type === "mood") {
+        /* 超出的心情直接跳过，把位置留给后面的小记和课程。
+           这里用 continue 而不是 break —— break 会让整个列表提前结束。 */
+        if (maxMood >= 0 && moods >= maxMood) continue;
+        moods++;
+        item = { title: meta.label ? "心情 · " + meta.label : "记录了一次心情", quote: "", kind: "mood", refId: "" };
+      } else if (e.type === "note") {
+        item = { title: "今日小记", quote: e.note || "", kind: "note", refId: "" };
+      } else {
+        item = { title: e.note || "一条记录", quote: "", kind: e.type, refId: "" };
+      }
+
+      item.date = e.date;
+      item.day = UI.dotDate(e.date).slice(5);
+      item.ts = e.ts;
+      out.push(item);
+      if (limit && out.length >= limit) break;
+    }
+    return out;
+  }
+
+  /* =======================================================================
+   * 收藏 / 设置 / 探索过的主题
+   * ===================================================================== */
+  function favorites() { return loadJson(KEYS.favorites, []); }
+  function isFav(id) { return favorites().indexOf(id) !== -1; }
+  function toggleFav(id) {
+    var f = favorites(), i = f.indexOf(id);
+    if (i === -1) f.push(id); else f.splice(i, 1);
+    saveJson(KEYS.favorites, f);
+    return i === -1;              /* true = 刚收藏 */
+  }
+
+  function settings() {
+    var s = loadJson(KEYS.settings, null) || {};
+    if (!s.remind) s.remind = { on: false, time: "20:00" };
+    if (!s.explored) s.explored = [];
+    return s;
+  }
+  function saveSettings(s) { saveJson(KEYS.settings, s); }
+
+  /* 记录「看过某个探索入口」。刻意不写进 journal ——
+     浏览入口不算成长活动，不该影响连续天数。 */
+  function markExplored(topicId) {
+    var s = settings();
+    if (s.explored.indexOf(topicId) === -1) {
+      s.explored.push(topicId);
+      saveSettings(s);
+    }
+  }
+
+  /* =======================================================================
+   * 15 题：保存答案 + 生成《第一次认识自己》
+   * ===================================================================== */
+  function saveAssessment(answers) {
+    var rec = window.Record.build(answers);
+    var p = getProfile() || { done: false, startedAt: Date.now() };
+    p.done = true;
+    p.answers = answers;
+    p.answersVersion = 2;         /* 2 = 15 题版；老数据是 1 */
+    p.portrait = rec;
+    p.revisedAt = Date.now();
+    saveProfile(p);
+    rec.entryId = addJournal("assessment", rec.title, { kind: rec.kind, record: rec }).id;
+    return rec;
+  }
+
+  /* 那条「第一次认识自己」 */
+  function firstRecord() {
+    var j = journal();
+    for (var i = 0; i < j.length; i++) {
+      if (j[i].type === "assessment" && j[i].meta && j[i].meta.kind === "first-self") return j[i];
+    }
+    return null;
+  }
+
+  /* 老数据的答案版本；没有 profile 或没做过题时返回 0 */
+  function answersVersion() {
+    var p = getProfile();
+    if (!p || !p.answers) return 0;
+    return p.answersVersion === undefined ? 1 : p.answersVersion;
+  }
+
+  /* 把老用户标成 v1。只加一个标记字段，绝不动 answers / portrait */
+  function migrate() {
+    var p = getProfile();
+    if (p && p.answersVersion === undefined) {
+      p.answersVersion = p.answers ? 1 : 0;
+      saveProfile(p);
+    }
+  }
+
+  /* ---- 示例模式开关（见上面 demoState 的说明）---- */
+  function isDemo() { return demoState !== null; }
+  function startDemo() { demoState = window.DemoData.build(); }
+  /* 只是把指针放回 null。示例数据是内存里的对象，没有引用就回收了，
+     真实数据从头到尾没被碰过 —— 所以「退出示例」不需要恢复任何东西。 */
+  function stopDemo() { demoState = null; }
+
   /* ---- 统计 ---- */
   function doneIds() {
     var p = progress(), out = [];
@@ -551,6 +1564,24 @@ textarea:focus{border-color:#c4d6cb;background:#fff}
     while (has(cur)) { count++; cur = UI.dayBefore(cur); }
     return count;
   }
+  /* 写过小记的天数（去重日期） */
+  function noteDays() {
+    var j = journal(), set = {}, n = 0;
+    for (var i = 0; i < j.length; i++) {
+      if (j[i].type === "note" && !set[j[i].date]) { set[j[i].date] = true; n++; }
+    }
+    return n;
+  }
+  /* 近 N 天记过心情的天数。
+     这里刻意【不】提供均值：一个 3.1 这样的分数，会让人开始比较
+     「这个月是不是比上个月差」，而起伏本来就该由曲线去说。
+     数次数是中性的，打分不是。 */
+  function moodDays(days) {
+    var s = moodSeries(days), n = 0;
+    for (var i = 0; i < s.length; i++) if (s[i].score) n++;
+    return n;
+  }
+
   function stats() {
     var ids = doneIds();
     var total = (window.COURSES || []).length;
@@ -559,13 +1590,25 @@ textarea:focus{border-color:#c4d6cb;background:#fff}
     weekAgo.setDate(weekAgo.getDate() - 7);
     for (var i = 0; i < j.length; i++) if (j[i].ts >= weekAgo.getTime()) thisWeek++;
     var todayActive = j.some(function (e) { return e.date === td; });
+    var fr = firstRecord();
+
     return {
+      /* 原有字段：很多页面在读，一个都不能改 */
       coursesTotal: total,
       coursesDone: ids.length,
       practiceDone: practiceDistinct(),
       streak: streak(),
       thisWeek: thisWeek,
-      todayActive: todayActive
+      todayActive: todayActive,
+
+      /* 新增 */
+      recordCount: j.length,
+      noteDays: noteDays(),
+      moodDays30: moodDays(30),
+      favCount: favorites().length,
+      exploreCount: settings().explored.length,
+      hasFirstRecord: !!fr,
+      firstRecordTs: fr ? fr.ts : 0
     };
   }
 
@@ -575,6 +1618,8 @@ textarea:focus{border-color:#c4d6cb;background:#fff}
       localStorage.removeItem(raw(KEYS.progress));
       localStorage.removeItem(raw(KEYS.journal));
       localStorage.removeItem(raw(KEYS.practices));
+      localStorage.removeItem(raw(KEYS.favorites));
+      localStorage.removeItem(raw(KEYS.settings));
     } catch (e) {}
   }
 
@@ -587,99 +1632,389 @@ textarea:focus{border-color:#c4d6cb;background:#fff}
     completeCourse: completeCourse, logSession: logSession,
     doneIds: doneIds, nextCourseId: nextCourseId,
     practiceDistinct: practiceDistinct, streak: streak, stats: stats,
-    resetAll: resetAll
+    resetAll: resetAll,
+
+    /* 示例模式 */
+    isDemo: isDemo, startDemo: startDemo, stopDemo: stopDemo,
+
+    /* 昵称 */
+    nickname: nickname, saveNickname: saveNickname,
+    /* 小记 / 心情 */
+    upsertToday: upsertToday, todayEntry: todayEntry,
+    saveDailyNote: saveDailyNote, saveMood: saveMood,
+    moodSeries: moodSeries, moodDays: moodDays, entries: entries,
+    timelineItems: timelineItems,
+    /* 收藏 / 设置 / 探索记录 */
+    favorites: favorites, isFav: isFav, toggleFav: toggleFav,
+    settings: settings, saveSettings: saveSettings, markExplored: markExplored,
+    /* 15 题 */
+    saveAssessment: saveAssessment, firstRecord: firstRecord,
+    answersVersion: answersVersion, migrate: migrate
   };
 })();
 </script>
-  <script>
+<script>
 /* =========================================================================
  * 成长空间 · 路由与页面切换
+ * -------------------------------------------------------------------------
  * 页面由 window.Pages[name] 提供：
- *   { title?, render(params)->html, bind(viewEl, params), hideTab?, hideBar? }
- * 底部 5 个根页面(tab) + 下钻页面(zone/lesson/assess)。
+ *   { title?, render(params)->html, bind(viewEl, params),
+ *     rail?(params)->html, bindRail?(railEl, params),   // 可选右栏（宽屏）
+ *     hideTab?, hideBar? }                              // 整屏页用
+ *
+ * 导航只有一份数据源 TABS：桌面侧栏与手机底栏都由它生成，
+ * 将来改名 / 调顺序只改这里一处。
  * ========================================================================= */
 (function () {
   "use strict";
 
-  var TABS = ["home", "route", "course", "practice", "archive"];
-  var TAB_NAMES = { home: "首页", route: "成长路线", course: "课程", practice: "练习", archive: "我的档案" };
+  var TABS = [
+    { id: "home",    label: "首页",     icon: "home" },
+    { id: "trace",   label: "成长轨迹", icon: "path" },
+    { id: "notes",   label: "记录",     icon: "pen" },
+    { id: "explore", label: "探索",     icon: "compass" },
+    { id: "me",      label: "我的",     icon: "user" }
+  ];
+
+  var TAB_NAMES = {};
+  for (var t = 0; t < TABS.length; t++) TAB_NAMES[TABS[t].id] = TABS[t].label;
 
   var state = { tab: "home", stack: [] };
 
   function isTab(name) { return TAB_NAMES.hasOwnProperty(name); }
 
+  /* ---- 导航渲染：两个容器共用一份数据 ---- */
+  function buildNav(host) {
+    if (!host) return;
+    var h = [];
+    for (var i = 0; i < TABS.length; i++) {
+      h.push('<button class="tab" data-nav="' + TABS[i].id + '" type="button">' +
+        UI.icon(TABS[i].icon, 20) + "<span>" + TABS[i].label + "</span></button>");
+    }
+    host.innerHTML = h.join("");
+    /* 事件委托：整个容器一个监听。
+       逐按钮绑的话，将来重建导航（换顺序/换文案）监听会全部丢失。 */
+    host.addEventListener("click", function (e) {
+      var b = e.target;
+      while (b && b !== host) {
+        if (b.getAttribute && b.getAttribute("data-nav")) {
+          navigate(b.getAttribute("data-nav"));
+          return;
+        }
+        b = b.parentNode;
+      }
+    });
+  }
+
   function render(name, params) {
     var page = window.Pages[name];
     if (!page) { name = "home"; page = window.Pages.home; }
-    var v = UI.$("#view");
-    v.innerHTML = page.render(params || {});
-    if (page.bind) page.bind(v, params || {});
+    params = params || {};
 
-    /* 顶栏 */
-    var hideBar = !!(page.hideBar || name === "assess");
+    var v = UI.$("#view");
+    v.innerHTML = page.render(params);
+    if (page.bind) page.bind(v, params);
+
+    /* ---- 右栏：容器在外壳，内容由页面填 ----
+       必须【无条件先清空】：漏了这一步，用户会带着首页的「今日小记」
+       出现在成长轨迹页。 */
+    var rail2 = UI.$("#rail2");
+    if (rail2) {
+      rail2.innerHTML = page.rail ? page.rail(params) : "";
+      if (page.rail && page.bindRail) page.bindRail(rail2, params);
+    }
+    document.body.classList.toggle("has-rail", !!page.rail);
+
+    /* ---- 顶栏 ---- */
+    var hideBar = !!page.hideBar;
     var topbar = UI.$("#topbar");
     if (topbar) topbar.classList.toggle("hidden", hideBar);
-    UI.$("#btnBack") && UI.$("#btnBack").classList.toggle("hidden", isTab(name));
-
+    var back = UI.$("#btnBack");
+    if (back) back.classList.toggle("hidden", isTab(name));
     var titleEl = UI.$("#pageTitle");
     if (titleEl) {
-      var t = (typeof page.title === "function" ? page.title(params) : page.title) || TAB_NAMES[name] || "成长空间";
-      titleEl.textContent = t;
+      var tt = (typeof page.title === "function" ? page.title(params) : page.title);
+      titleEl.textContent = tt || TAB_NAMES[name] || "成长空间";
     }
     document.body.classList.toggle("no-bar", hideBar);
-    document.body.classList.toggle("no-tab", !!(page.hideTab || name === "assess"));
 
-    /* 底部导航 */
+    /* ---- 底部导航 / 侧栏 ---- */
+    var hideTab = !!page.hideTab;
+    document.body.classList.toggle("no-tab", hideTab);
     var tabbar = UI.$("#tabbar");
-    if (tabbar) {
-      var hideTab = !!(page.hideTab || name === "assess");
-      tabbar.classList.toggle("hidden", hideTab);
-      var btns = UI.$all("#tabbar .tab");
-      for (var i = 0; i < btns.length; i++) {
-        var active = btns[i].getAttribute("data-nav") === name;
-        btns[i].classList.toggle("on", active);
-      }
+    if (tabbar) tabbar.classList.toggle("hidden", hideTab);
+
+    var navs = UI.$all("[data-nav]");
+    for (var i = 0; i < navs.length; i++) {
+      navs[i].classList.toggle("on", navs[i].getAttribute("data-nav") === name);
     }
+
     window.scrollTo(0, 0);
     if (window.afterNav) window.afterNav(name, params);
-    state.current = { name: name, params: params || {} };
+    state.current = { name: name, params: params };
     return state.current;
+  }
+
+  /* page.enter 只在【用户主动进入】时调用，页面自己调 render() 重绘时不调。
+     15 题那种「一页多步」的流程靠它复位，否则第二次进来会停在完成页。 */
+  function enter(name, params) {
+    var page = window.Pages[name];
+    if (page && page.enter) page.enter(params || {});
   }
 
   function navigate(name, params) {
     if (isTab(name)) { state.tab = name; state.stack = []; }
     else { state.stack.push({ name: name, params: params || {} }); }
+    enter(name, params);
     return render(name, params);
   }
 
   function back() {
     var target;
-    if (state.stack.length) { state.stack.pop(); }
-    if (state.stack.length) { var top = state.stack[state.stack.length - 1]; target = top; }
-    else { target = { name: state.tab, params: {} }; }
+    if (state.stack.length) state.stack.pop();
+    if (state.stack.length) {
+      var top = state.stack[state.stack.length - 1];
+      target = top;
+    } else {
+      target = { name: state.tab, params: {} };
+    }
+    enter(target.name, target.params);
     return render(target.name, target.params);
   }
 
   function current() { return state.current || { name: state.tab }; }
 
   function init() {
-    UI.$("#btnBack").addEventListener("click", function () { back(); });
-    var btns = UI.$all("#tabbar .tab");
-    for (var i = 0; i < btns.length; i++) {
-      (function (b) {
-        b.addEventListener("click", function () { navigate(b.getAttribute("data-nav")); });
-      })(btns[i]);
-    }
+    buildNav(UI.$("#tabbar"));
+    buildNav(UI.$("#railNav"));
+    var back = UI.$("#btnBack");
+    if (back) back.addEventListener("click", function () { Router.back(); });
   }
 
   window.Router = {
     TABS: TABS, TAB_NAMES: TAB_NAMES,
-    navigate: navigate, back: back, render: render, init: init, current: current
+    navigate: navigate, back: back, render: render, init: init, current: current,
+    isTab: isTab
   };
 })();
 </script>
-  <!-- 数据层 -->
-  <script>
+<script>
+/* =========================================================================
+ * 成长空间 · 共享渲染组件
+ * -------------------------------------------------------------------------
+ * 一次抽取、多处复用：课程行、时间轴、心情曲线。
+ * 「成长轨迹」用纵向时间轴，首页用横向——是同一份数据、两种排布，
+ * 不是两份要同步维护的代码。
+ * ========================================================================= */
+(function () {
+  "use strict";
+
+  /* ---------------------------------------------------------------------
+   * 课程行
+   * ------------------------------------------------------------------- */
+  function lessonRow(c, opts) {
+    opts = opts || {};
+    var done = Store.isDone(c.id);
+    var started = Store.courseState(c.id) === "started";
+    var label = done ? "已完成" : started ? "继续" : "开始";
+    var fav = Store.isFav(c.id);
+    return '<div class="lesson-row' + (done ? " done" : "") + '" data-go-lesson="' + c.id + '" role="button" tabindex="0">' +
+      '<span class="lr-no">' + UI.courseNo(c.order) + "</span>" +
+      '<div class="lr-text"><b>' + UI.esc(c.title) + "</b>" +
+      '<span class="muted small">预计 ' + c.minutes + " 分钟" + (done ? " · 已完成" : "") + "</span></div>" +
+      (opts.showFav === false ? "" :
+        '<button class="lr-fav' + (fav ? " on" : "") + '" data-fav="' + c.id + '" ' +
+        'aria-label="' + (fav ? "取消收藏" : "收藏") + '" title="' + (fav ? "取消收藏" : "收藏") + '">' +
+        UI.icon("star", 16) + "</button>") +
+      '<span class="lr-cta">' + label + " " + UI.icon("chevron", 14) + "</span></div>";
+  }
+
+  /* 课程 id 列表 -> 课程行列表 */
+  function lessonList(ids) {
+    var h = [];
+    for (var i = 0; i < ids.length; i++) {
+      var c = (window.Course && Course.byId) ? Course.byId(ids[i]) : null;
+      if (c) h.push(lessonRow(c));
+    }
+    return h.join("");
+  }
+
+  /* ---------------------------------------------------------------------
+   * 时间轴
+   * items: [{ date, day, title, quote, kind, refId, ts }]
+   * opts.layout: "v" 纵向（成长轨迹页/手机） | "h" 横向（首页宽屏）
+   * ------------------------------------------------------------------- */
+  function timeline(items, opts) {
+    opts = opts || {};
+    if (!items || !items.length) return "";
+    var layout = opts.layout === "h" ? "h" : "v";
+    var h = ['<ol class="tl tl-' + layout + '">'];
+    for (var i = 0; i < items.length; i++) {
+      var it = items[i];
+      h.push('<li class="tl-item' + (it.kind ? " k-" + it.kind : "") + '"' +
+        (it.refId ? ' data-record="' + UI.esc(it.refId) + '" role="button" tabindex="0"' : "") + ">" +
+        '<span class="tl-dot" aria-hidden="true"></span>' +
+        '<span class="tl-date">' + UI.esc(it.day || UI.dotDate(it.date).slice(5)) + "</span>" +
+        '<b class="tl-title">' + UI.esc(it.title) + "</b>" +
+        (it.quote ? '<p class="tl-quote">' + UI.esc(it.quote) + "</p>" : "") +
+        "</li>");
+    }
+    h.push("</ol>");
+    /* 横向时间轴必须自带滚动容器 —— 否则会把桌面栅格撑爆，整页出现横向滚动条 */
+    return layout === "h" ? '<div class="tl-scroll">' + h.join("") + "</div>" : h.join("");
+  }
+
+  /* ---------------------------------------------------------------------
+   * 心情曲线（近 N 天）
+   * 手写 SVG，不引入任何图表库：file:// + 微信分发场景下 CDN 是死路。
+   * 缺数据的日子断开、不连线。stroke 用 CSS 变量，换色板时自动跟随。
+   * ------------------------------------------------------------------- */
+  function moodSvg(series, opts) {
+    opts = opts || {};
+    var W = 300, H = opts.height || 84, PAD = 8;
+    if (!series || series.length < 2) return "";
+    var segs = [], seg = [], dots = [], i;
+    var last = series.length - 1;
+
+    for (i = 0; i < series.length; i++) {
+      var s = series[i].score;
+      if (!s) {
+        /* 没记录的日子断开 —— 但线段至少要有两个点才画 */
+        if (seg.length > 1) segs.push(seg.join(" "));
+        seg = [];
+        continue;
+      }
+      var x = Math.round(i * (W / last));
+      var y = Math.round(H - PAD - ((s - 1) / 4) * (H - PAD * 2));
+      seg.push(x + "," + y);
+      /* 每个记录点都留一个圆点。
+         只画线不画点的话，三三两两的短线段看起来就是几道游离的斜杠，
+         读不出「这是我留下的记录」—— 点才是这条曲线的锚。 */
+      dots.push('<circle cx="' + x + '" cy="' + y + '" r="2.6" fill="currentColor"/>');
+    }
+    if (seg.length > 1) segs.push(seg.join(" "));
+    if (!dots.length) return "";
+
+    var out = ['<svg class="mood-curve" viewBox="0 0 ' + W + " " + H + '" preserveAspectRatio="none" aria-hidden="true">'];
+    /* 底线：给悬浮的圆点一个参照，否则整条曲线像是飘在卡片中间 */
+    out.push('<line x1="0" y1="' + (H - PAD) + '" x2="' + W + '" y2="' + (H - PAD) +
+      '" stroke="currentColor" stroke-width="1" opacity=".16"/>');
+    for (i = 0; i < segs.length; i++) {
+      out.push('<polyline points="' + segs[i] + '" fill="none" stroke="currentColor" ' +
+        'stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity=".5"/>');
+    }
+    out.push(dots.join(""));
+    out.push("</svg>");
+    return out.join("");
+  }
+
+  /* 心情曲线下方的日期刻度（只显示首尾与中间） */
+  function moodAxis(series) {
+    if (!series || !series.length) return "";
+    var idx = [0, Math.floor((series.length - 1) / 2), series.length - 1];
+    var h = ['<div class="mood-axis">'];
+    for (var i = 0; i < 3; i++) {
+      h.push("<span>" + UI.dotDate(series[idx[i]].date).slice(5) + "</span>");
+    }
+    h.push("</div>");
+    return h.join("");
+  }
+
+  /* ---------------------------------------------------------------------
+   * 事件绑定（统一入口，避免每个页面各写一份）
+   * ------------------------------------------------------------------- */
+  function bindLessonRows(root) {
+    var rows = UI.$all("[data-go-lesson]", root);
+    for (var i = 0; i < rows.length; i++) (function (b) {
+      b.addEventListener("click", function (e) {
+        /* 收藏按钮在课程行内部，别把点击一起吞掉 */
+        if (e.target && e.target.closest && e.target.closest("[data-fav]")) return;
+        var id = b.getAttribute("data-go-lesson");
+        Store.markStarted(id);
+        Router.navigate("lesson", { id: id });
+      });
+    })(rows[i]);
+  }
+
+  function bindFav(root, onDone) {
+    var btns = UI.$all("[data-fav]", root);
+    for (var i = 0; i < btns.length; i++) (function (b) {
+      b.addEventListener("click", function (e) {
+        e.stopPropagation();
+        var id = b.getAttribute("data-fav");
+        var now = Store.toggleFav(id);
+        b.classList.toggle("on", now);
+        var lab = now ? "取消收藏" : "收藏";
+        b.setAttribute("aria-label", lab);
+        b.setAttribute("title", lab);
+        UI.toast(now ? "已收藏" : "已取消收藏");
+        if (onDone) onDone(now);
+      });
+    })(btns[i]);
+  }
+
+  function bindFields(root) {
+    var f = UI.$all("[data-field]", root);
+    for (var i = 0; i < f.length; i++) (function (el) {
+      el.addEventListener("input", function () {
+        el.setAttribute("data-value", el.value);
+      });
+    })(f[i]);
+  }
+
+  /* 通用「跳到某页 / 某记录 / 某主题」 */
+  function bindGo(root) {
+    var g = UI.$all("[data-go]", root);
+    for (var i = 0; i < g.length; i++) (function (b) {
+      b.addEventListener("click", function () {
+        Router.navigate(b.getAttribute("data-go"));
+      });
+    })(g[i]);
+
+    var r = UI.$all("[data-record]", root);
+    for (var j = 0; j < r.length; j++) (function (b) {
+      b.addEventListener("click", function () {
+        Router.navigate("record", { id: b.getAttribute("data-record") });
+      });
+    })(r[j]);
+
+    var t = UI.$all("[data-topic]", root);
+    for (var k = 0; k < t.length; k++) (function (b) {
+      b.addEventListener("click", function () {
+        Router.navigate("topic", { id: b.getAttribute("data-topic") });
+      });
+    })(t[k]);
+  }
+
+  /* 心情五档：score 只用来画曲线的高低，不是打分、不做评价。
+     label 是给用户看的词，中性、不带褒贬。 */
+  /* label 进数据与 aria（「心情 · 还算平静」），short 只给窄栏按钮用。
+     右栏一张卡片 262px 放 5 个按钮，每个约 47px —— 4 个字必定折行。 */
+  var MOODS = [
+    { id: "m1", score: 1, label: "很低落", short: "低落", icon: "mood1" },
+    { id: "m2", score: 2, label: "有点沉", short: "有点沉", icon: "mood2" },
+    { id: "m3", score: 3, label: "还算平静", short: "平静", icon: "mood3" },
+    { id: "m4", score: 4, label: "还不错", short: "还不错", icon: "mood4" },
+    { id: "m5", score: 5, label: "挺好的", short: "挺好", icon: "mood5" }
+  ];
+  function moodById(id) {
+    for (var i = 0; i < MOODS.length; i++) if (MOODS[i].id === id) return MOODS[i];
+    return null;
+  }
+
+  window.Widgets = {
+    lessonRow: lessonRow, lessonList: lessonList,
+    timeline: timeline, moodSvg: moodSvg, moodAxis: moodAxis,
+    bindLessonRows: bindLessonRows, bindFav: bindFav,
+    bindFields: bindFields, bindGo: bindGo,
+    MOODS: MOODS, moodById: moodById
+  };
+  /* 兼容旧引用（course.js / route.js 曾用全局函数） */
+  window.bindLessonRows = bindLessonRows;
+})();
+</script>
+<!-- 数据层 -->
+<script>
 /* =========================================================================
  * 成长空间 · 9 大成长区域框架
  * -------------------------------------------------------------------------
@@ -771,103 +2106,7 @@ textarea:focus{border-color:#c4d6cb;background:#fff}
   };
 })();
 </script>
-  <script>
-/* =========================================================================
- * 成长空间 · 成长状态自评（数据 + 画像规则）
- * 只输出「当前状态 / 值得关注的方向 / 推荐练习」，
- * 不做人格类型、不做心理等级结论。
- * ========================================================================= */
-(function () {
-  "use strict";
-
-  var SCALE_WORDS = ["很少", "偶尔", "有时", "经常", "很明显"];
-
-  var QUESTIONS = [
-    { key: "q1", text: "当事情发生时，我常常会马上就有反应。", needSign: "high" },
-    { key: "q2", text: "我能注意到自己的情绪正在变化。", needSign: "low" },
-    { key: "q3", text: "我能看出，在类似的事情上，我常常用同一种方式应对。", needSign: "low" },
-    { key: "q4", text: "情绪很冲的时候，我能先停下来，而不是立刻发作。", needSign: "low" },
-    { key: "q5", text: "我会回头想想那些反复困扰我的问题。", needSign: "low" }
-  ];
-
-  var FOCUS_TEXT = {
-    q1: "练习在反应之前，先给自己一个“停一下”的间隙",
-    q2: "练习留意自己情绪的变化——哪怕只是“我在生气”“我在紧张”",
-    q3: "练习认出自己在哪些相似情境里，反复用同一种方式应对",
-    q4: "练习在情绪最冲的时候，先拉开一点距离，再决定怎么回应",
-    q5: "练习定期回头看看，自己正在重复哪些模式"
-  };
-  /* 每个方向对应中央区里的课程 */
-  var COURSE_MAP = { q1: "c1", q2: "c3", q3: "c2", q4: "c4", q5: "c5" };
-
-  function courseById(id) {
-    var cs = window.COURSES || [];
-    for (var i = 0; i < cs.length; i++) if (cs[i].id === id) return cs[i];
-    return null;
-  }
-
-  /* answers: {q1:1..5, ...} */
-  function buildPortrait(answers) {
-    var total = 0, scored = [];
-    for (var i = 0; i < QUESTIONS.length; i++) {
-      var q = QUESTIONS[i], v = answers[q.key];
-      v = Math.max(1, Math.min(5, Number(v) || 3));
-      var need = q.needSign === "high" ? v : 6 - v;   // 需要关注的程度 1..5
-      total += need;
-      scored.push({ q: q.key, need: need });
-    }
-    scored.sort(function (a, b) { return b.need - a.need; });
-
-    var focus = [], seen = {};
-    for (var k = 0; k < scored.length && focus.length < 2; k++) {
-      if (scored[k].need >= 2 && !seen[scored[k].q]) {
-        seen[scored[k].q] = true;
-        focus.push({ q: scored[k].q, text: FOCUS_TEXT[scored[k].q], need: scored[k].need });
-      }
-    }
-    if (!focus.length) {
-      /* 五项都比较稳时，仍给一个温和的“保持方向” */
-      focus.push({ q: "q2", text: "现在的状态已经比较稳，可以继续在“留意自己的反应”上保持练习", need: 0 });
-    }
-
-    /* 推荐课程：由关注方向映射，不足时补第一课 */
-    var recommendIds = [], seenC = {};
-    for (var m = 0; m < focus.length; m++) {
-      var cid = COURSE_MAP[focus[m].q];
-      if (cid && !seenC[cid]) { seenC[cid] = true; recommendIds.push(cid); }
-    }
-    if (!recommendIds.length) recommendIds.push("c1");
-
-    var state;
-    if (total <= 9) {
-      state = "你已经开始留意自己的反应，这个起点本身就很难得。接下来的练习，会把“事后想明白”，慢慢练成“当场就看见”。";
-    } else if (total <= 16) {
-      state = "大多数时候，你是在事情过去之后才想明白；真正难的，是“当下的那几秒”。这几节课程，会陪你在最容易被带走的时刻，练习先停一停。";
-    } else {
-      state = "情绪或冲突来得很快的时候，你常常来不及刹车。这里不会评判你，只会陪你一小步一小步地练：看见它、暂停一下、再选择怎么回应。";
-    }
-
-    return {
-      state: state,
-      focus: focus.map(function (f) { return { q: f.q, text: f.text }; }),
-      recommendIds: recommendIds,
-      raw: { total: total, answers: answers }
-    };
-  }
-
-  function scaleWord(n) { return SCALE_WORDS[n - 1] || ""; }
-
-  window.ASSESS = {
-    intro: "下面 5 个句子，请按最近一两周的真实感受，为每句选一个最接近的数字。没有对错，也不是考试。",
-    questions: QUESTIONS,
-    scaleWords: SCALE_WORDS,
-    scaleWord: scaleWord,
-    buildPortrait: buildPortrait,
-    courseMap: COURSE_MAP
-  };
-})();
-</script>
-  <script>
+<script>
 /* =========================================================================
  * 成长空间 · 第一阶段 5 节真实课程（全部归属「中央区 · 自我认知与反应」）
  * body 块类型：h=小标题 / p=正文 / case=生活案例
@@ -1075,330 +2314,1886 @@ textarea:focus{border-color:#c4d6cb;background:#fff}
     return COURSES.filter(function (c) { return c.regionId === regionId; })
       .sort(function (a, b) { return a.order - b.order; });
   }
+  /* 下一节【必须】在同一个 regionId 里找。
+     原来按全局 order 查：一旦别的门类也各自从 1 开始编号，
+     这里会返回另一门类的课，或者返回 null 让「下一节」按钮凭空消失。 */
   function nextAfter(id) {
     var c = byId(id); if (!c) return null;
-    return COURSES.filter(function (x) { return x.order === c.order + 1; })[0] || null;
+    var same = ofRegion(c.regionId), i;
+    for (i = 0; i < same.length; i++) {
+      if (same[i].id === c.id) return same[i + 1] || null;
+    }
+    return null;
   }
 
   window.COURSES = COURSES;
   window.Course = { byId: byId, ofRegion: ofRegion, nextAfter: nextAfter };
 })();
 </script>
-  <!-- 页面层 -->
-  <script>
+<script>
 /* =========================================================================
- * 首页：今天想给自己留 10 分钟吗？→ 今日课程 / 今日练习 / 成长进度
+ * 成长空间 · 「15 个问题｜第一次认识自己」
+ * -------------------------------------------------------------------------
+ * 这不是心理测试，也不是人格测试。
+ * 它的目的只有一个：让用户停下来，看一看最近的自己。
+ *
+ * 因此这里刻意【没有】：
+ *   - 正确答案 / 得分 / 等级 / 类型
+ *   - 任何医学、心理疾病、玄学判断
+ *   - 任何“你属于 XX”的结论
+ *
+ * options[].tone 是【内部权重，绝不渲染】：0 表示更觉察，3 表示更被带走。
+ * 它只用来生成完成页那句温和的“最近的你，似乎正在更多地关注……”，
+ * 不会展示给用户，也不会告诉用户哪个答案更好。
  * ========================================================================= */
 (function () {
   "use strict";
-  window.Pages = window.Pages || {};
 
-  function statCell(k, v) {
-    return '<div class="stat"><b>' + UI.esc(v) + '</b><span>' + k + '</span></div>';
-  }
-
-  Pages.home = {
-    title: "成长空间",
-    render: function () {
-      var st = Store.stats();
-      var esc = UI.esc;
-      var hr = new Date().getHours();
-      var greet = hr < 5 ? "夜深了，辛苦了" : hr < 11 ? "早上好" : hr < 14 ? "中午好" : hr < 18 ? "下午好" : "晚上好";
-      var recId = Store.nextCourseId();
-      var rec = recId ? Course.byId(recId) : null;
-      var h = [];
-
-      h.push('<section class="hero">' +
-        '<div class="hero-row"><span class="brand-mini">成长空间</span><span class="streak-chip">连续成长 ' + st.streak + ' 天</span></div>' +
-        '<p class="greet">' + greet + '</p>' +
-        '<h2 class="hero-q">今天，你想给自己<br>留 10 分钟吗？</h2></section>');
-
-      if (rec) {
-        var stateLabel = Store.isDone(rec.id) ? "再学一次" : (Store.courseState(rec.id) === "started" ? "继续" : "开始");
-        h.push('<section class="card today-card">' +
-          '<div class="card-head"><span class="label">今日课程</span></div>' +
-          '<h3>' + esc(rec.title) + '</h3>' +
-          '<p class="meta muted">预计 ' + rec.minutes + ' 分钟 · 中央区 · 第 ' + rec.order + ' 节</p>' +
-          '<p class="sub">' + esc(rec.summary) + '</p>' +
-          '<button class="btn primary wide" data-go-lesson="' + rec.id + '">' + stateLabel + '今天的成长</button>' +
-          '</section>');
-
-        h.push('<section class="card soft">' +
-          '<div class="card-head"><span class="label">今日练习</span></div>' +
-          '<p class="pt">' + esc(rec.practice.title) + '</p>' +
-          '<button class="link" data-go-lesson="' + rec.id + '">去做练习 →</button>' +
-          '</section>');
-      } else {
-        h.push('<section class="card done-card">' +
-          '<div class="big">完成</div>' +
-          '<h3>第一阶段 5 节都走完了</h3>' +
-          '<p>你已经有“在反应之前先看见它”的能力了。之后可以把练习偶尔带回来重温，也可以去档案里看看自己走过的路。</p>' +
-          '<div class="btnrow"><button class="btn ghost" data-go="archive">去看我的档案</button>' +
-          '<button class="btn primary" data-assess="1">更新一次状态</button></div></section>');
-      }
-
-      var pct = st.coursesTotal ? Math.round(st.coursesDone / st.coursesTotal * 100) : 0;
-      h.push('<section class="card">' +
-        '<div class="card-head"><span class="label">我的成长进度</span><span class="muted">' + st.coursesDone + ' / ' + st.coursesTotal + ' 节</span></div>' +
-        '<div class="bar"><i style="width:' + pct + '%"></i></div>' +
-        '<div class="statrow">' +
-        statCell("课程", st.coursesDone + " / " + st.coursesTotal) +
-        statCell("练习", st.practiceDone + " / " + st.coursesTotal) +
-        statCell("连续成长", st.streak + " 天") +
-        '</div></section>');
-
-      h.push('<p class="today-note">' +
-        (st.todayActive ? "今天已经留下成长记录 ☺" : "今天还没有记录——完成今天这节课，就会留下今天的第一笔。") +
-        '</p>');
-
-      return h.join("");
-    },
-    bind: function (v) {
-      var els = UI.$all("[data-go-lesson]", v);
-      for (var i = 0; i < els.length; i++) els[i].addEventListener("click", goLesson);
-      var a = UI.$all("[data-go]", v);
-      for (var j = 0; j < a.length; j++) (function (b) {
-        b.addEventListener("click", function () { Router.navigate(b.getAttribute("data-go")); });
-      })(a[j]);
-      var as = UI.$all("[data-assess]", v);
-      for (var k = 0; k < as.length; k++) as[k].addEventListener("click", function () {
-        Router.navigate("assess", { mode: "redo" });
-      });
-    }
+  /* 维度：用于生成「我比较在意的事情」与「我想继续了解的方向」 */
+  var DIMS = {
+    understand: "自我理解",
+    emotion: "情绪与反应",
+    relation: "关系与沟通",
+    action: "行动与习惯",
+    self: "自我接纳",
+    thinking: "思维与认知"
   };
-  function goLesson(e) {
-    var id = e.currentTarget.getAttribute("data-go-lesson");
-    Store.markStarted(id);
-    Router.navigate("lesson", { id: id });
+
+  var QUESTIONS = [
+    /* ---- 十个日常自我观察 ---- */
+    {
+      key: "q1", no: 1, dim: "understand", kind: "choice",
+      group: "日常",
+      title: "最近的自己",
+      text: "最近这段时间，你对自己的状态更接近哪一种感觉？",
+      /* 设计意图：让用户开始进行自我观察 */
+      options: [
+        { v: "A", text: "我大概知道自己在经历什么", tone: 0 },
+        { v: "B", text: "有些事情能感觉到，但还说不清", tone: 1 },
+        { v: "C", text: "经常被情绪或事情带着走", tone: 2 },
+        { v: "D", text: "最近有点不知道自己怎么了", tone: 3 }
+      ]
+    },
+    {
+      key: "q2", no: 2, dim: "emotion", kind: "choice",
+      group: "日常",
+      title: "情绪",
+      text: "当一种明显的情绪出现时，你通常会：",
+      options: [
+        { v: "A", text: "能比较快发现自己正在有什么情绪", tone: 0 },
+        { v: "B", text: "过一会儿才意识到", tone: 1 },
+        { v: "C", text: "通常先做出反应，之后才发现自己情绪很大", tone: 2 },
+        { v: "D", text: "我常常说不清自己到底是什么感觉", tone: 3 }
+      ]
+    },
+    {
+      key: "q3", no: 3, dim: "emotion", kind: "choice",
+      group: "日常",
+      title: "触发",
+      text: "当别人说了一句话让你不舒服时，你更容易：",
+      /* 设计意图：观察自动反应与觉察之间的距离 */
+      options: [
+        { v: "A", text: "先停一下，看看自己为什么不舒服", tone: 0 },
+        { v: "B", text: "当下会有情绪，但之后会想一想", tone: 1 },
+        { v: "C", text: "很容易马上反驳或防御", tone: 2 },
+        { v: "D", text: "表面没什么，之后却一直想着这件事", tone: 3 }
+      ]
+    },
+    {
+      key: "q4", no: 4, dim: "thinking", kind: "choice",
+      group: "日常",
+      title: "遇到问题",
+      text: "当一件事情没有按照预期发生时，你通常会：",
+      /* 设计意图：参考“向外归责 / 向内反思”的思路，
+         但不告诉用户哪一个答案更好 —— 所以这里没有对错标注 */
+      options: [
+        { v: "A", text: "先看看事情本身，再想自己能做什么", tone: 0 },
+        { v: "B", text: "先抱怨一下，然后再处理", tone: 1 },
+        { v: "C", text: "很容易觉得是别人或环境的问题", tone: 2 },
+        { v: "D", text: "会反复想“为什么偏偏是我”", tone: 3 }
+      ]
+    },
+    {
+      key: "q5", no: 5, dim: "thinking", kind: "choice",
+      group: "日常",
+      title: "思维",
+      text: "当你发现一件自己原本相信的事情可能并不完全正确时：",
+      options: [
+        { v: "A", text: "我愿意重新看看", tone: 0 },
+        { v: "B", text: "会有点不舒服，但可以继续了解", tone: 1 },
+        { v: "C", text: "第一反应通常是反驳", tone: 2 },
+        { v: "D", text: "我很难改变原来的看法", tone: 3 }
+      ]
+    },
+    {
+      key: "q6", no: 6, dim: "action", kind: "choice",
+      group: "日常",
+      title: "专注",
+      text: "当你需要完成一件事情时：",
+      options: [
+        { v: "A", text: "通常可以比较专注地完成", tone: 0 },
+        { v: "B", text: "容易被手机或其他事情打断", tone: 1 },
+        { v: "C", text: "经常同时做很多事情", tone: 2 },
+        { v: "D", text: "明知道要做，却很难真正开始", tone: 3 }
+      ]
+    },
+    {
+      key: "q7", no: 7, dim: "self", kind: "choice",
+      group: "日常",
+      title: "自我接纳",
+      text: "当你发现自己某方面做得不好时，你更容易：",
+      options: [
+        { v: "A", text: "接受自己现在的状态，然后想办法调整", tone: 0 },
+        { v: "B", text: "会失望，但过一阵子可以放下", tone: 1 },
+        { v: "C", text: "很容易责怪自己", tone: 2 },
+        { v: "D", text: "会反复拿自己和别人比较", tone: 3 }
+      ]
+    },
+    {
+      key: "q8", no: 8, dim: "relation", kind: "choice",
+      group: "日常",
+      title: "关系",
+      text: "和别人发生分歧时，你通常：",
+      options: [
+        { v: "A", text: "希望先理解彼此为什么会这样想", tone: 0 },
+        { v: "B", text: "会表达自己的想法，但也愿意听对方", tone: 1 },
+        { v: "C", text: "很容易觉得对方根本不理解我", tone: 2 },
+        { v: "D", text: "通常会选择不说，自己消化", tone: 3 }
+      ]
+    },
+    {
+      key: "q9", no: 9, dim: "relation", kind: "choice",
+      group: "日常",
+      title: "表达",
+      text: "当你真正不舒服的时候，你更容易：",
+      options: [
+        { v: "A", text: "尝试说清楚自己的感受和需要", tone: 0 },
+        { v: "B", text: "会说，但经常不知道怎么表达", tone: 1 },
+        { v: "C", text: "先忍着，忍到受不了才说", tone: 2 },
+        { v: "D", text: "干脆不说，希望对方自己能发现", tone: 3 }
+      ]
+    },
+    {
+      key: "q10", no: 10, dim: "thinking", kind: "choice",
+      group: "日常",
+      title: "信息",
+      text: "最近接触很多信息、观点和建议时：",
+      /* 设计意图：参考“信息过滤能力”，转化为日常生活中的信息选择 */
+      options: [
+        { v: "A", text: "我会先判断什么对自己真正有用", tone: 0 },
+        { v: "B", text: "通常会先收藏起来，以后再看", tone: 1 },
+        { v: "C", text: "很容易被别人的观点影响", tone: 2 },
+        { v: "D", text: "信息太多时，我反而不知道自己真正想要什么", tone: 3 }
+      ]
+    },
+
+    /* ---- 三个情境选择 ---- */
+    {
+      key: "q11", no: 11, dim: "self", kind: "choice",
+      group: "情境",
+      title: "情境：被否定",
+      text: "你认真做了一件事情，却被别人直接否定了。你的第一反应更接近：",
+      /* 设计意图：回答后不评价用户，只记录选择 */
+      options: [
+        { v: "A", text: "“他说的具体是什么？我先听听。”", tone: 0 },
+        { v: "B", text: "“我有点难受，但我想知道他说得有没有道理。”", tone: 1 },
+        { v: "C", text: "“他凭什么这么说？”", tone: 2 },
+        { v: "D", text: "“算了，可能是我真的不行。”", tone: 3 }
+      ]
+    },
+    {
+      key: "q12", no: 12, dim: "action", kind: "choice",
+      group: "情境",
+      title: "情境：计划被打乱",
+      text: "今天原本安排好的事情突然全部被打乱。你更可能：",
+      /* 设计意图：参考“反应固化 / 反应变通”，但不直接告诉用户理论名称 */
+      options: [
+        { v: "A", text: "重新整理一下，看看现在还能做什么", tone: 0 },
+        { v: "B", text: "会烦躁一阵子，然后慢慢调整", tone: 1 },
+        { v: "C", text: "整个人的节奏都会被打乱", tone: 2 },
+        { v: "D", text: "直接放弃今天的计划", tone: 3 }
+      ]
+    },
+    {
+      key: "q13", no: 13, dim: "relation", kind: "choice",
+      group: "情境",
+      title: "情境：关系中的冲突",
+      text: "你和一个重要的人发生了争执。冷静下来以后，你更可能：",
+      options: [
+        { v: "A", text: "想知道自己真正介意的是什么", tone: 0 },
+        { v: "B", text: "会想想对方可能在想什么", tone: 1 },
+        { v: "C", text: "一直回想对方说过的话", tone: 2 },
+        { v: "D", text: "更希望对方先来理解我", tone: 3 }
+      ]
+    },
+
+    /* ---- 两个开放问题 ---- */
+    {
+      key: "q14", no: 14, dim: "", kind: "text",
+      group: "开放",
+      title: "停下来看看自己",
+      text: "如果不用考虑别人怎么看，最近的你，最想改变的一件事情是什么？",
+      placeholder: "写一句就好，不需要完整。"
+    },
+    {
+      key: "q15", no: 15, dim: "", kind: "text",
+      group: "开放",
+      title: "给现在的自己",
+      text: "如果现在的你可以对一个月后的自己说一句话，你想说什么？",
+      placeholder: "可以是一句话，也可以什么都不说。"
+    }
+  ];
+
+  var CHOICE_COUNT = 13;
+  var TEXT_COUNT = 2;
+
+  function byKey(k) {
+    for (var i = 0; i < QUESTIONS.length; i++) if (QUESTIONS[i].key === k) return QUESTIONS[i];
+    return null;
   }
+
+  /* 仅取选择题（用于维度统计） */
+  function choiceQuestions() {
+    var out = [];
+    for (var i = 0; i < QUESTIONS.length; i++) if (QUESTIONS[i].kind === "choice") out.push(QUESTIONS[i]);
+    return out;
+  }
+
+  window.QUESTIONNAIRE = {
+    intro: {
+      title: "最近的你，还好吗？",
+      subtitle: "用 15 个问题，花几分钟认识一下现在的自己。",
+      note: "没有标准答案。\n选最接近现在的你就好。",
+      meta: "约 5 分钟 · 15 个问题",
+      startLabel: "开始探索 →"
+    },
+    done: {
+      title: "第一次认识自己",
+      subtitle: "这不是一个结论。\n只是把此刻的你，认真留下来。"
+    },
+    dims: DIMS,
+    questions: QUESTIONS,
+    byKey: byKey,
+    choiceQuestions: choiceQuestions,
+    choiceCount: CHOICE_COUNT,
+    textCount: TEXT_COUNT,
+    total: QUESTIONS.length
+  };
 })();
 </script>
-  <script>
+<script>
 /* =========================================================================
- * 成长路线（9 区 3×3 空间地图） + 区域详情
+ * 成长空间 · 《第一次认识自己》记录生成
+ * -------------------------------------------------------------------------
+ * 由 15 题的【选择分布】生成一份温和的「记录式反馈」。
+ *
+ * 这不是评估，也不是结论：
+ *   - 不计算“你是什么类型”，不给答案打分，不告诉用户哪个答案更好
+ *   - 不做心理诊断，不出现任何医学 / 玄学判断
+ *   - 使用简单的规则映射（对每个维度累加内部权重），不做复杂算法
+ *   - 多个方向接近时，明确说“似乎同时在关注几个方向”，不强行给单一结论
+ * ========================================================================= */
+(function () {
+  "use strict";
+
+  /* 维度 -> 「我想继续了解的方向」的一句话 */
+  var DIRECTION = {
+    understand: "最近的自己，正在经历什么",
+    emotion: "情绪来的时候，它到底想告诉我什么",
+    relation: "在关系里，我真正的需要是什么",
+    action: "想做的事，怎么才能真的开始",
+    self: "我怎么看待自己，又是怎么和自己说话的",
+    thinking: "我脑子里那些“理所当然”，是不是只有一种可能"
+  };
+
+  /* 做题时“被带走”程度越高，越说明这个方向此刻占着他/她的心 */
+  var CARE_ORDER = ["understand", "emotion", "relation", "self", "action", "thinking"];
+
+  /* ---- 维度统计：纯粹是选择分布的汇总，不是评分 ---- */
+  function dimWeights(answers) {
+    answers = answers || {};
+    var qs = window.QUESTIONNAIRE.choiceQuestions();
+    var byDim = {}, i, j;
+
+    for (i = 0; i < qs.length; i++) {
+      var q = qs[i];
+      if (!q.dim) continue;
+      var pick = findOption(q, answers[q.key]);
+      if (!pick) continue;
+      if (!byDim[q.dim]) byDim[q.dim] = { dim: q.dim, weight: 0, count: 0 };
+      byDim[q.dim].weight += pick.tone;
+      byDim[q.dim].count += 1;
+    }
+
+    var out = [];
+    for (i = 0; i < CARE_ORDER.length; i++) {
+      if (byDim[CARE_ORDER[i]]) out.push(byDim[CARE_ORDER[i]]);
+    }
+    /* 权重高的排前面；同权重时保持 CARE_ORDER 的稳定顺序 */
+    out.sort(function (a, b) { return b.weight - a.weight; });
+    return out;
+  }
+
+  function findOption(q, v) {
+    if (v == null) return null;
+    for (var i = 0; i < q.options.length; i++) if (q.options[i].v === v) return q.options[i];
+    return null;
+  }
+
+  /* 取最突出的若干维度；与最高权重相差 <=1 的都算“同时在关注” */
+  function topDims(dims, max) {
+    if (!dims.length) return [];
+    var top = dims[0].weight, out = [];
+    for (var i = 0; i < dims.length && out.length < max; i++) {
+      if (top - dims[i].weight > 1) break;
+      if (dims[i].weight <= 0) break;
+      out.push(dims[i].dim);
+    }
+    return out;
+  }
+
+  function names(dims, joinWord) {
+    var out = [];
+    for (var i = 0; i < dims.length; i++) out.push(window.QUESTIONNAIRE.dims[dims[i]] || dims[i]);
+    return out.join(joinWord || "、");
+  }
+
+  /* ---- 各段文字 ---- */
+
+  function stateText(answers) {
+    var q1 = window.QUESTIONNAIRE.byKey("q1");
+    var pick = q1 ? findOption(q1, answers.q1) : null;
+    if (!pick) return "最近的你，开始愿意停下来看看自己。这件事本身，就已经是开始。";
+    if (pick.tone === 0) {
+      return "最近的你，对自己正在经历什么是比较清楚的。你知道自己走在什么样的路上，这让接下来的每一步都有个落脚点。";
+    }
+    if (pick.tone === 1) {
+      return "最近的你，有些部分能感觉到，还有些部分暂时说不清。这很正常——说不清的地方，往往是还没被认真看过的地方。";
+    }
+    if (pick.tone === 2) {
+      return "最近的你，好像常常被情绪或事情推着走，反应比觉察来得更快一些。这不代表你做错了什么，只是那几秒的间隙，还没被留出来。";
+    }
+    return "最近的你，好像有点不知道自己怎么了。在这样的时候还愿意坐下来回答问题，本身就是一次很温柔的自我照顾。";
+  }
+
+  function careText(dims, top) {
+    if (!top.length) return "你还没有特别集中的方向。也许此刻更重要的，只是先允许自己停一停。";
+    /* 空行是用 <br><br> 拼出来的，周围没有别的排版线索时，
+       那个空档看起来不像「分段」，像「渲染漏了一块」——
+       所以这里都收成单换行，改用一句话把方向讲完。 */
+    if (top.length === 1) {
+      return "最近的你，似乎正在更多地关注：\n" + names(top) + "。";
+    }
+    return "最近的你，似乎同时在关注几个方向：\n" + names(top) +
+      "。\n它们不必同时解决，先挑一个最想看的就好。";
+  }
+
+  function noticeText(answers, dims) {
+    var parts = [];
+
+    var q2 = window.QUESTIONNAIRE.byKey("q2");
+    var p2 = q2 ? findOption(q2, answers.q2) : null;
+    if (p2) {
+      if (p2.tone <= 1) parts.push("你能比较快地发现自己正在有什么情绪，这是很珍贵的能力。");
+      else parts.push("你留意到，情绪往往是在反应之后才被认出来的。");
+    }
+
+    var q3 = window.QUESTIONNAIRE.byKey("q3");
+    var p3 = q3 ? findOption(q3, answers.q3) : null;
+    if (p3) {
+      if (p3.tone === 0) parts.push("不舒服的时候，你会先停下来看看自己为什么不舒服。");
+      else if (p3.tone === 3) parts.push("你写下的那种“表面没什么、之后一直想着”，说明有些情绪还在等你回头看看它。");
+      else parts.push("你不舒服的时候会有反应，但之后愿意回头想一想。");
+    }
+
+    var q7 = window.QUESTIONNAIRE.byKey("q7");
+    var p7 = q7 ? findOption(q7, answers.q7) : null;
+    if (p7 && p7.tone >= 2) parts.push("对自己，你好像比对别人更严格一些。");
+    else if (p7 && p7.tone === 0) parts.push("面对做得不好的地方，你能先接受它，再想办法调整。");
+
+    if (!parts.length) parts.push("你愿意花几分钟，认真回答这些问题——这本身就是一次自我观察。");
+    return parts.join("");
+  }
+
+  function directionText(top, dims) {
+    var use = top.length ? top : [dims.length ? dims[0].dim : "understand"];
+    var lines = [];
+    for (var i = 0; i < use.length; i++) {
+      var d = DIRECTION[use[i]];
+      if (d) lines.push("· " + d);
+    }
+    if (!lines.length) return "· 最近的自己，正在经历什么";
+    return lines.join("\n");
+  }
+
+  function futureText(answers) {
+    var t = (answers && answers.q15) ? String(answers.q15).replace(/^\s+|\s+$/g, "") : "";
+    if (!t) return "（这一句，你留给了自己。）";
+    return t;
+  }
+
+  function changeText(answers) {
+    var t = (answers && answers.q14) ? String(answers.q14).replace(/^\s+|\s+$/g, "") : "";
+    if (!t) return "";
+    return t;
+  }
+
+  /* ---- 组装 ---- */
+  function build(answers) {
+    answers = answers || {};
+    var dims = dimWeights(answers);
+    var top = topDims(dims, 3);
+    var sections = [];
+
+    sections.push({ k: "state", label: "我最近的状态", text: stateText(answers) });
+
+    var change = changeText(answers);
+    if (change) {
+      sections.push({ k: "change", label: "我最近最想改变的", text: change });
+    }
+
+    sections.push({ k: "care", label: "我比较在意的事情", text: careText(dims, top) });
+    sections.push({ k: "notice", label: "我注意到的自己", text: noticeText(answers, dims) });
+    sections.push({ k: "direction", label: "我想继续了解的方向", text: directionText(top, dims) });
+    sections.push({ k: "future", label: "我写给未来自己的话", text: futureText(answers) });
+
+    return {
+      kind: "first-self",
+      title: "第一次认识自己",
+      quote: "我开始认真看看最近的自己。",
+      sections: sections,
+      dims: top,
+      dimNames: names(top)
+    };
+  }
+
+  /* 完成页顶部的「此刻的你」——比记录更短的一句观察 */
+  function summary(record) {
+    var n = record.dimNames;
+    if (!n) return "最近的你，开始愿意停下来看看自己。";
+    return "最近的你，似乎正在更多地关注：\n" + n + "。";
+  }
+
+  window.Record = {
+    build: build,
+    summary: summary,
+    dimWeights: dimWeights,
+    topDims: topDims,
+    direction: DIRECTION
+  };
+})();
+</script>
+<script>
+/* =========================================================================
+ * 成长空间 · 探索入口
+ * -------------------------------------------------------------------------
+ * 这些是「当前需求入口」，不是诊断，也不是分类标签。
+ * 点进去不会给出结论，只会给一句被听见的话，和可以继续往前走的方向。
+ * 文案里刻意不出现任何医学、心理疾病、人格类型的词。
+ * ========================================================================= */
+(function () {
+  "use strict";
+
+  var TOPICS = [
+    {
+      id: "anxiety",
+      name: "最近有点焦虑",
+      icon: "cloud",
+      /** 一句“被听见”的话，不做解释、不下判断 */
+      echo: "心里好像一直悬着点什么，说不上具体是什么，但就是落不下来。",
+      /** 可以继续看的方向：既有课程 id */
+      courses: ["c3", "c1"]
+    },
+    {
+      id: "racing",
+      name: "脑子停不下来",
+      icon: "ring",
+      echo: "事情已经过去了，念头还在原地转。想停下来，却停不下来。",
+      courses: ["c4", "c1"]
+    },
+    {
+      id: "irritable",
+      name: "最近很容易烦躁",
+      icon: "branch",
+      echo: "一点小事就能点着，发完火又觉得不值得。",
+      courses: ["c3", "c4"]
+    },
+    {
+      id: "tired",
+      name: "和某个人相处让我很累",
+      icon: "water",
+      echo: "每次相处完，都要缓很久。你开始怀疑是不是自己的问题。",
+      courses: ["c4", "c5"]
+    },
+    {
+      id: "nothing",
+      name: "最近什么都不想做",
+      icon: "mountain",
+      echo: "不是不想好起来，只是提不起劲。连“应该做点什么”都变成了压力。",
+      courses: ["c1", "c5"]
+    },
+    {
+      id: "knowself",
+      name: "想更了解自己",
+      icon: "sprout",
+      echo: "不是有什么问题，只是想更清楚地知道自己是怎么回事。",
+      courses: ["c2", "c5"]
+    }
+  ];
+
+  function byId(id) {
+    for (var i = 0; i < TOPICS.length; i++) if (TOPICS[i].id === id) return TOPICS[i];
+    return null;
+  }
+
+  window.TOPICS = {
+    list: TOPICS,
+    byId: byId,
+    /** 探索页的标题文案 */
+    heading: "此刻，你想看什么？",
+    sub: "从一个小练习开始，了解自己的内在与外在。",
+    footNote: "这些只是此刻的需求入口。如果你正经历持续的困扰，找信任的人聊一聊，会比任何网页都更有帮助。"
+  };
+})();
+</script>
+<script>
+/* =========================================================================
+ * 成长空间 · 示例数据
+ * -------------------------------------------------------------------------
+ * 给「先看看示例」用：一份「用了十来天」的数据，让朋友一打开就能看到
+ * 首页有轨迹、成长轨迹有节点、我的画像有内容 —— 而不是一片空状态。
+ *
+ * 两个关键性质：
+ *
+ * 1. 它【完全不碰 LocalStorage】。进入示例模式后，Store 的读写都改道到
+ *    这个内存对象，用同一个拦截面 —— 所以十个页面自动全部生效，
+ *    不需要每个页面各写一份示例逻辑。朋友在示例里点什么都不会留下痕迹，
+ *    退出即消失，也绝不会覆盖他自己的真实数据。
+ *
+ *    附带的好处：iOS 上 localStorage 被禁用时（file:// 下有可能），
+ *    示例模式反而是唯一能完整跑起来的部分 —— 因为它本来就不用存储。
+ *
+ * 2. 日期一律「相对今天」算。不管哪一天打开，看起来都是刚用过的样子。
+ *
+ * 入口：称呼页和首页空状态的「先看看示例」。退出：顶部那条示例横幅。
+ * ========================================================================= */
+(function () {
+  "use strict";
+
+  function pad(n) { return (n < 10 ? "0" : "") + n; }
+
+  function iso(off) {
+    var d = new Date(Date.now() - off * 86400000);
+    return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate());
+  }
+  function ts(off) { return Date.now() - off * 86400000; }
+
+  function build() {
+    var j = [], n = 0;
+
+    function add(off, type, note, meta) {
+      n++;
+      j.push({
+        /* id 带 demo 前缀：万一它出现在真实数据里（不应该），一眼认得出来 */
+        id: "demo" + n,
+        date: iso(off),
+        /* 同一天可能有多条，加 n 保证排序稳定 */
+        ts: ts(off) + n,
+        type: type, note: note || "", meta: meta || {}
+      });
+    }
+
+    /* 11 天前：第一次认识自己 —— 整条轨迹的起点 */
+    var rec = window.Record.build({
+      q1: "B", q2: "C", q3: "D", q4: "B", q5: "B", q6: "D", q7: "C", q8: "D",
+      q9: "C", q10: "C", q11: "B", q12: "C", q13: "C",
+      q14: "想少一点地责怪自己，多一点地照顾自己。",
+      q15: "不用急着变好，先别丢下自己。"
+    });
+    add(11, "assessment", rec.title, { kind: "first-self", record: rec });
+
+    /* 小记与心情。刻意留几天空白 —— 心情曲线本来就会断开，不连线 */
+    add(10, "note", "今天开完会又反复想了两小时，写下来好像就没那么重了。");
+    add(10, "mood", "", { moodId: "m2", score: 2, label: "有点沉" });
+    add(9, "course", "完成课程《我为什么总是下意识地这样反应？》", {
+      courseId: "c1",
+      reflections: [{ q: "你最容易在什么时刻被自动反应带走？", a: "别人语气稍微冷一点，我第一反应就是自己是不是做错了。" }]
+    });
+    add(9, "mood", "", { moodId: "m3", score: 3, label: "还算平静" });
+    add(8, "note", "试着在回消息之前停了三秒。很难，但做到了两次。");
+    add(6, "course", "完成课程《看见自己的自动化反应》", {
+      courseId: "c2",
+      reflections: [{ q: "你的触发点通常是什么？", a: "被否定的时候。" }]
+    });
+    add(6, "mood", "", { moodId: "m4", score: 4, label: "还不错" });
+    add(5, "note", "今天什么也没做。允许自己什么也没做。");
+    add(4, "mood", "", { moodId: "m1", score: 1, label: "很低落" });
+    add(3, "note", "和妈妈打了电话，说起小时候的事，忽然理解了一点。");
+    add(3, "mood", "", { moodId: "m3", score: 3, label: "还算平静" });
+    add(1, "note", "把上次那节课的练习又做了一遍，这次写得比上次长。");
+    add(1, "mood", "", { moodId: "m4", score: 4, label: "还不错" });
+    add(0, "mood", "", { moodId: "m5", score: 5, label: "挺好的" });
+
+    j.sort(function (a, b) { return a.ts - b.ts; });
+
+    /* 键名用的是 Store 内部的短名（profile / progress / …），
+       不是 "gs.profile" —— 拦截发生在 raw(k) 之前。 */
+    return {
+      profile: {
+        done: true,
+        startedAt: ts(11),
+        nickname: "小舟",
+        nicknameSetAt: ts(11),
+        answersVersion: 2,
+        answers: { q1: "B" },
+        portrait: rec
+      },
+      progress: {
+        c1: { status: "done", finishedAt: ts(9) },
+        c2: { status: "done", finishedAt: ts(6) },
+        c3: { status: "started" }
+      },
+      journal: j,
+      practices: [
+        { id: "c1-1", courseId: "c1", note: "", date: iso(9), ts: ts(9) },
+        { id: "c2-1", courseId: "c2", note: "", date: iso(6), ts: ts(6) }
+      ],
+      favorites: ["c4"],
+      settings: { remind: { on: true, time: "20:00" }, explored: ["anxiety"] }
+    };
+  }
+
+  window.DemoData = { build: build };
+})();
+</script>
+<!-- 页面层 -->
+<script>
+/* =========================================================================
+ * 成长空间 · 首页
+ * -------------------------------------------------------------------------
+ * 这一版首页的主线不是课程，是四件事：
+ *   看见自己 → 留一句话 → 看见变化 → 知道下一步能去哪
+ * 所以第一屏最重要的入口是「最近的你，还好吗？」（15 题），
+ * 而不是任何一节课程。课程只在用户自己产生需求之后才出现。
+ *
+ * 侧栏三块（今日小记 / 我的心情 / 近期学习）在手机上没有右栏，
+ * 会以内联卡片出现在正文末尾 —— 同一份 HTML、同一个绑定函数，
+ * 只渲染两遍，不维护两份代码。
+ * ========================================================================= */
+(function () {
+  "use strict";
+
+  /* ---------------------------------------------------------------------
+   * 侧栏三块
+   * ------------------------------------------------------------------- */
+  function sideHtml() {
+    var h = [];
+    var today = Store.todayEntry("note");
+    var moodToday = Store.todayEntry("mood");
+    var curMood = moodToday && moodToday.meta ? moodToday.meta.moodId : "";
+    var series = Store.moodSeries(14);
+    var hasMood = false;
+    for (var k = 0; k < series.length; k++) if (series[k].score) hasMood = true;
+    var curve = hasMood ? Widgets.moodSvg(series) : "";
+
+    /* 今日小记 */
+    h.push('<div class="rail-card note-box">');
+    h.push("<h4>" + UI.icon("pen", 15) + "今日小记</h4>");
+    h.push('<textarea data-field="dailyNote" placeholder="今天有什么想留下的？一句就好。">' +
+      UI.esc(today ? today.note : "") + "</textarea>");
+    h.push('<div class="note-foot">' +
+      '<span class="note-hint">' +
+      (today ? "今天已记下 · " + UI.friendlyTime(today.ts) : "只存在你自己的浏览器里") +
+      "</span>" +
+      '<button class="btn ghost" data-save-note="1" type="button">保存</button>' +
+      "</div>");
+    h.push("</div>");
+
+    /* 我的心情 */
+    h.push('<div class="rail-card">');
+    h.push("<h4>" + UI.icon("heart", 15) + "我的心情</h4>");
+    if (curve) {
+      h.push('<div class="mood-wrap">' + curve + "</div>" + Widgets.moodAxis(series));
+    } else {
+      h.push('<div class="mood-empty">还没有记录。<br>选一个此刻最接近的，曲线会从这里开始。</div>');
+    }
+    h.push('<div class="mood-pick">');
+    for (var i = 0; i < Widgets.MOODS.length; i++) {
+      var m = Widgets.MOODS[i];
+      h.push('<button class="mood-btn' + (m.id === curMood ? " on" : "") + '"' +
+        ' data-mood="' + m.id + '" type="button"' +
+        ' aria-label="' + m.label + '" title="' + m.label + '">' +
+        UI.icon(m.icon, 22) + "<span>" + m.short + "</span></button>");
+    }
+    h.push("</div>");
+    h.push('<p class="rail-note">' + (hasMood ? "近 14 天。没有记录的日子会断开，不连线。" : "不是打分，只是给此刻的自己留个标记。") + "</p>");
+    h.push("</div>");
+
+    /* 近期学习 */
+    var st = Store.stats();
+    var pct = st.coursesTotal ? Math.round(st.coursesDone / st.coursesTotal * 100) : 0;
+    var nextId = Store.nextCourseId();
+    var next = nextId && window.Course ? Course.byId(nextId) : null;
+    h.push('<div class="rail-card">');
+    h.push("<h4>" + UI.icon("book", 15) + "近期学习</h4>");
+    h.push('<div class="bar"><i style="width:' + pct + '%"></i></div>');
+    h.push('<p class="rail-note">已走过 ' + st.coursesDone + " / " + st.coursesTotal +
+      " 节 · 连续 " + st.streak + " 天</p>");
+    /* 右栏只有 262px，容不下收藏星标 —— 收藏在「探索」页里做，
+       这里只留一条「接着去哪」的线索 */
+    h.push(next ? Widgets.lessonRow(next, { showFav: false }) : '<p class="rail-quiet">五节都走完了。<br>新的方向正在展开。</p>');
+    h.push("</div>");
+
+    return h.join("");
+  }
+
+  function bindSide(root) {
+    /* 今日小记：只写当天的同一条，改主意重写不会留下两条 */
+    var btn = UI.$("[data-save-note]", root);
+    var ta = UI.$('[data-field="dailyNote"]', root);
+    if (btn && ta) {
+      btn.addEventListener("click", function () {
+        var txt = ta.value.replace(/^\s+|\s+$/g, "");
+        if (!txt) { UI.toast("写一句就好"); ta.focus(); return; }
+        Store.saveDailyNote(txt);
+        UI.toast("已经记下了");
+        Router.render("home", {});
+      });
+    }
+
+    /* 心情：点一下即存，立刻重绘曲线 */
+    var moodBtns = UI.$all("[data-mood]", root);
+    for (var i = 0; i < moodBtns.length; i++) (function (b) {
+      b.addEventListener("click", function () {
+        var m = Widgets.moodById(b.getAttribute("data-mood"));
+        if (!m) return;
+        var again = Store.todayEntry("mood") && Store.todayEntry("mood").meta.moodId === m.id;
+        Store.saveMood(m.id, m.score, m.label);
+        UI.toast(again ? "今天的心情改好了" : "记下了：" + m.label);
+        Router.render("home", {});
+      });
+    })(moodBtns[i]);
+
+    Widgets.bindLessonRows(root);
+    Widgets.bindFav(root);
+  }
+
+  /* ---------------------------------------------------------------------
+   * 正文
+   * ------------------------------------------------------------------- */
+  function render() {
+    var p = Store.getProfile() || {};
+    var nick = p.nickname || "";
+    var first = Store.firstRecord();
+    var st = Store.stats();
+    var h = [];
+
+    /* 问候 */
+    h.push('<div class="home-head">' +
+      "<div><h1>" + (nick ? "你好，" + UI.esc(nick) : "你好") + "</h1>" +
+      '<p class="sub">每一次的停留，都是在靠近更真实的自己。</p></div>' +
+      '<div class="home-date"><b>' + UI.dotDate(UI.today()) + "</b>" +
+      UI.weekday(UI.today()) + "</div>" +
+      "</div>");
+
+    /* 15 题入口 —— 首页最重要的一块 */
+    h.push('<div class="invite' + (first ? " done" : "") + '">' +
+      '<span class="inv-art" aria-hidden="true"></span><div class="invite-inner">');
+    if (!first) {
+      h.push('<p class="inv-kicker">第一次认识自己</p>');
+      h.push("<h2>" + UI.esc(QUESTIONNAIRE.intro.title) + "</h2>");
+      h.push('<p class="inv-sub">' + UI.esc(QUESTIONNAIRE.intro.subtitle) + "</p>");
+      h.push('<p class="inv-note">' + UI.textLines(QUESTIONNAIRE.intro.note) + "</p>");
+      h.push('<p class="inv-meta">' + UI.esc(QUESTIONNAIRE.intro.meta) + "</p>");
+      h.push('<button class="btn primary" data-go="questionnaire" type="button">' +
+        "开始探索 " + UI.icon("arrow", 17) + "</button>");
+    } else {
+      h.push('<p class="inv-kicker">你已经留下了</p>');
+      h.push("<h2>" + UI.esc(first.note || "第一次认识自己") + "</h2>");
+      h.push('<p class="inv-sub">' + UI.esc(first.meta && first.meta.record ? first.meta.record.quote : "") + "</p>");
+      h.push('<p class="inv-meta">' + UI.dotDate(first.date) + " 写下 · 那时候的你</p>");
+      h.push('<button class="btn ghost" data-record="' + first.id + '" type="button">' +
+        "回看这一份 " + UI.icon("arrow", 17) + "</button>");
+      h.push('<p class="inv-note">想重新认识一次，也可以再来一遍。</p>');
+      h.push('<button class="link small" data-go="questionnaire" type="button">重新做一次 →</button>');
+    }
+    h.push("</div></div>");
+
+    /* 最近的成长记录 */
+    /* maxMood:2 —— 摘要里最多两条心情，其余位置让给小记、课程、画像。
+       心情是背景，不是「我做过的事」；「成长轨迹」页仍是完整的。
+       见 store.js timelineItems 上的说明。 */
+    var items = Store.timelineItems(8, { maxMood: 2 });
+    h.push('<div class="sec-head"><h2>最近的成长记录</h2>' +
+      (items.length ? '<button class="link small" data-go="trace" type="button">全部 →</button>' : "") +
+      "</div>");
+    if (!items.length) {
+      h.push('<div class="empty">' + UI.icon("sprout", 30) +
+        "<b>这里还很安静</b>" +
+        "<p>完成一次认识自己，或者写一句今天的自己，<br>你的轨迹就会从这里长出来。</p>" +
+        '<button class="btn ghost" data-go="notes" type="button">去看看记录</button>' +
+        /* 空白页最劝退的是「不知道该拿它干嘛」。给一条能立刻看到
+           用起来是什么样子的路 —— 数据是假的，但页面是真的。 */
+        '<p class="empty-alt">还不确定的话，' +
+        '<button class="link small" data-demo="1" type="button">先看看示例</button></p>' +
+        "</div>");
+    } else {
+      h.push(Widgets.timeline(items, { layout: "h" }));
+    }
+
+    /* 此刻可以探索的方向 */
+    h.push('<div class="sec-head"><h2>' + UI.esc(TOPICS.heading) + "</h2></div>");
+    h.push('<p class="sec-note">' + UI.esc(TOPICS.sub) + "</p>");
+    h.push('<div class="topic-grid">');
+    var explored = Store.settings().explored;
+    for (var i = 0; i < TOPICS.list.length; i++) {
+      var t = TOPICS.list[i];
+      var seen = explored.indexOf(t.id) !== -1;
+      h.push('<button class="topic-card' + (seen ? " seen" : "") + '"' +
+        ' data-topic="' + t.id + '" type="button">' +
+        '<span class="tc-ic">' + UI.icon(t.icon, 22) + "</span>" +
+        "<b>" + UI.esc(t.name) + "</b>" +
+        '<span class="tc-sub">' + (seen ? "看过了" : "点进去看看") + "</span>" +
+        "</button>");
+    }
+    h.push("</div>");
+
+    /* 收尾：不催促，只说明 */
+    h.push('<div class="rail-quiet">成长不是一条要赶完的路。<br>今天只走了一小步，也算数。</div>');
+
+    /* 手机端没有右栏，把侧栏内容内联在正文末尾；
+       ≥1180px 时这段由 CSS 隐藏，改由 #rail2 显示 */
+    h.push('<div class="rail-mobile">' + sideHtml() + "</div>");
+
+    return h.join("");
+  }
+
+  function bind(viewEl) {
+    Widgets.bindGo(viewEl);
+    bindSide(UI.$(".rail-mobile", viewEl) || viewEl);
+  }
+
+  /* 宽屏右栏：同一份 sideHtml() */
+  function rail() {
+    return '<div class="rail-inline">' + sideHtml() + "</div>";
+  }
+  function bindRail(railEl) { bindSide(railEl); }
+
+  window.Pages = window.Pages || {};
+  window.Pages.home = {
+    title: "首页",
+    render: render, bind: bind,
+    rail: rail, bindRail: bindRail
+  };
+})();
+</script>
+<script>
+/* =========================================================================
+ * 成长空间 · 成长轨迹
+ * -------------------------------------------------------------------------
+ * 这里只做一件事：把用户做过的事，按时间摆出来。
+ * 不打分、不排名、不显示「进步了多少」——只让他看见自己确实走过。
+ * 手机端固定纵向：横向时间轴在 <900px 时由 CSS 折成纵向，DOM 只有一份。
  * ========================================================================= */
 (function () {
   "use strict";
   window.Pages = window.Pages || {};
 
-  function zoneStatusText(r) {
-    if (r.status === "live") return "可学习";
-    return "即将开放";
+  function statsLine(st) {
+    var bits = [];
+    if (st.recordCount) bits.push(st.recordCount + " 条记录");
+    if (st.noteDays) bits.push(st.noteDays + " 天写过小记");
+    if (st.streak > 1) bits.push("连续 " + st.streak + " 天");
+    return bits.join(" · ");
   }
 
-  Pages.route = {
-    title: "成长路线",
-    render: function () {
-      var st = Store.stats();
-      var cells = [], R = GData.regions;
-      for (var i = 0; i < R.length; i++) {
-        var r = R[i], live = r.status === "live";
-        var count = "";
-        if (live) {
-          var total = (Course.ofRegion(r.id)).length;
-          var done = 0, c;
-          for (var j = 0; j < total; j++) { c = Course.ofRegion(r.id)[j]; if (Store.isDone(c.id)) done++; }
-          count = '<span class="zc-count">' + done + ' / ' + total + '</span>';
-        }
-        cells.push('<a class="zone-cell' + (live ? " live" : "") + '" style="grid-row:' + r.pos.r + ';grid-column:' + r.pos.c +
-          '" data-zone="' + r.id + '"><span class="zc-name">' + UI.esc(r.name) + '</span>' +
-          count +
-          '<span class="zc-status' + (live ? " ok" : "") + '">' + zoneStatusText(r) + '</span></a>');
-      }
-      return '<p class="page-intro">9 个成长方向。第一阶段先专注中央区「自我认知与反应」，其余方向正在准备，会陆续开放。</p>' +
-        '<div class="zonemap">' + cells.join("") + '</div>' +
-        '<p class="muted small center">总进度：' + st.coursesDone + ' / ' + st.coursesTotal + ' 节</p>';
-    },
-    bind: function (v) {
-      var els = UI.$all(".zone-cell", v);
-      for (var i = 0; i < els.length; i++) (function (b) {
-        b.addEventListener("click", function () {
-          Router.navigate("zone", { id: b.getAttribute("data-zone") });
-        });
-      })(els[i]);
+  function render() {
+    var items = Store.timelineItems(0);
+    var st = Store.stats();
+    var h = [];
+
+    if (!items.length) {
+      h.push('<p class="page-intro">你走过的每一步，都会留在这里。</p>');
+      h.push('<div class="empty">' + UI.icon("path", 32) +
+        "<b>轨迹还没有开始</b>" +
+        "<p>做完「第一次认识自己」，或者写下今天的一句话，<br>第一个节点就会出现在这里。</p>" +
+        '<button class="btn primary" data-go="questionnaire" type="button">开始探索</button>' +
+        '<p class="small" style="margin-top:12px">或者 <button class="link small" data-go="notes" type="button">先写一句今天的自己</button></p>' +
+        "</div>");
+      return h.join("");
     }
+
+    var line = statsLine(st);
+    h.push('<p class="page-intro">你走过的每一步，都在这里。' +
+      (line ? '<br><span class="muted small">' + UI.esc(line) + "</span>" : "") + "</p>");
+    h.push(Widgets.timeline(items, { layout: "v" }));
+    h.push('<div class="rail-quiet">往前翻，看见的是自己走过的路。<br>不需要和谁比较。</div>');
+    return h.join("");
+  }
+
+  function bind(v) { Widgets.bindGo(v); }
+
+  /* 宽屏右栏：只读的概览，不重复正文 */
+  function rail() {
+    var st = Store.stats();
+    var h = [];
+    h.push('<div class="rail-card">');
+    h.push("<h4>" + UI.icon("path", 15) + "这一路</h4>");
+    h.push('<div class="statrow">' +
+      '<div class="stat"><b>' + st.recordCount + "</b><span>条记录</span></div>" +
+      '<div class="stat"><b>' + st.noteDays + "</b><span>天小记</span></div>" +
+      '<div class="stat"><b>' + st.streak + "</b><span>连续天数</span></div>" +
+      "</div>");
+    h.push("</div>");
+
+    /* 第一条《第一次认识自己》单独拎出来 —— 它是整条轨迹的起点。
+       不能拿 timelineItems 的末项充数：末项只是最老的一条，不一定是它。 */
+    var all = Store.timelineItems(0), start = null;
+    for (var i = 0; i < all.length; i++) {
+      if (all[i].kind === "assessment" && all[i].refId) { start = all[i]; break; }
+    }
+    if (start) {
+      h.push('<div class="rail-card">');
+      h.push("<h4>" + UI.icon("sprout", 15) + "最开始的那次</h4>");
+      h.push(Widgets.timeline([start], { layout: "v" }));
+      h.push("</div>");
+    }
+    return h.join("");
+  }
+
+  function bindRail(el) { Widgets.bindGo(el); }
+
+  window.Pages.trace = {
+    title: "成长轨迹",
+    render: render, bind: bind,
+    rail: rail, bindRail: bindRail
+  };
+})();
+</script>
+<script>
+/* =========================================================================
+ * 成长空间 · 记录
+ * -------------------------------------------------------------------------
+ * 首页的「今日小记 / 我的心情」是随手入口，这里是它们真正的主场：
+ * 今天可以改、可以重写，往下翻能看到全部记录。
+ *
+ * 所有内容都写进 gs.journal（按时序追加的行为流），
+ * 所以小记和心情会自动计入连续天数 —— 它们本来就是成长活动。
+ * ========================================================================= */
+(function () {
+  "use strict";
+  window.Pages = window.Pages || {};
+
+  var KIND = {
+    assessment: { icon: "sprout", label: "认识自己" },
+    course: { icon: "book", label: "课程" },
+    practice: { icon: "pen", label: "练习" },
+    note: { icon: "pen", label: "小记" },
+    mood: { icon: "heart", label: "心情" }
   };
 
-  Pages.zone = {
+  function kindOf(t) { return KIND[t] || { icon: "pen", label: "记录" }; }
+
+  /* journal 条目 -> 列表行 */
+  function entryRow(e) {
+    var k = kindOf(e.type);
+    var title, sub;
+
+    if (e.type === "assessment") {
+      title = e.note || "认识自己";
+      sub = e.meta && e.meta.record ? e.meta.record.quote : "";
+    } else if (e.type === "mood") {
+      title = e.meta && e.meta.label ? "心情 · " + e.meta.label : "记录了一次心情";
+      sub = "";
+    } else if (e.type === "note") {
+      title = e.note || "今日小记";
+      sub = "";
+    } else {
+      title = e.note || k.label;
+      var rs = (e.meta && e.meta.reflections) || [];
+      sub = "";
+      for (var i = 0; i < rs.length; i++) if (rs[i] && rs[i].a) { sub = rs[i].a; break; }
+    }
+
+    var openable = e.type === "assessment" && e.meta && e.meta.kind === "first-self";
+    return '<div class="rec-item k-' + UI.esc(e.type) + '"' +
+      (openable ? ' data-record="' + e.id + '" role="button" tabindex="0"' : "") + ">" +
+      '<span class="ri-ic">' + UI.icon(k.icon, 17) + "</span>" +
+      '<div class="ri-body">' +
+      '<span class="when">' + UI.esc(UI.dotDate(e.date)) + " · " + UI.esc(UI.weekday(e.date)) + "</span>" +
+      "<b>" + UI.esc(title) + "</b>" +
+      (sub ? "<p>" + UI.esc(sub) + "</p>" : "") +
+      "</div>" +
+      (openable ? '<span class="lr-cta">' + UI.icon("chevron", 14) + "</span>" : "") +
+      "</div>";
+  }
+
+  /* 全部记录（新的在前），按日期分组 */
+  function listHtml() {
+    var j = Store.journal();
+    if (!j.length) {
+      return '<div class="empty">' + UI.icon("pen", 30) +
+        "<b>还没有任何记录</b>" +
+        "<p>上面写一句、选一个心情，<br>这里就会出现第一条。</p></div>";
+    }
+    var h = [], lastDate = "";
+    for (var i = j.length - 1; i >= 0; i--) {
+      var e = j[i];
+      if (e.date !== lastDate) {
+        var gap = lastDate ? " style=\"margin-top:18px\"" : "";
+        h.push('<div class="label" ' + gap + ">" + UI.esc(UI.friendlyDate(e.date)) + "</div>");
+        lastDate = e.date;
+      }
+      h.push(entryRow(e));
+    }
+    return h.join("");
+  }
+
+  /* ---------------------------------------------------------------------
+   * 今日：小记 + 心情（和首页是同一套交互，只是这里可以慢慢改）
+   * ------------------------------------------------------------------- */
+  function todayHtml() {
+    var note = Store.todayEntry("note");
+    var mood = Store.todayEntry("mood");
+    var curId = mood && mood.meta ? mood.meta.moodId : "";
+    var series = Store.moodSeries(14);
+    var hasMood = false;
+    for (var k = 0; k < series.length; k++) if (series[k].score) hasMood = true;
+    var curve = hasMood ? Widgets.moodSvg(series) : "";
+    var h = [];
+
+    h.push('<div class="card note-box">');
+    h.push('<div class="card-head"><h3>今日小记</h3>' +
+      '<span class="small muted">' + UI.esc(UI.dotDate(UI.today())) + " " + UI.esc(UI.weekday(UI.today())) + "</span></div>");
+    h.push('<p class="small muted" style="margin:0 0 8px">想到什么写什么。写下的东西只有你自己看得到。</p>');
+    h.push('<textarea data-field="dailyNote" placeholder="今天有什么想留下的？一句就好。">' +
+      UI.esc(note ? note.note : "") + "</textarea>");
+    h.push('<div class="note-foot">' +
+      '<span class="note-hint">' + (note ? "上次记于 " + UI.friendlyTime(note.ts) : "今天还没写") + "</span>" +
+      '<button class="btn ghost" data-save-note="1" type="button">保存</button></div>');
+    h.push("</div>");
+
+    h.push('<div class="card">');
+    h.push('<div class="card-head"><h3>我的心情</h3><span class="small muted">近 14 天</span></div>');
+    if (curve) {
+      h.push('<div class="mood-wrap">' + curve + "</div>" + Widgets.moodAxis(series));
+    } else {
+      h.push('<div class="mood-empty">还没有记录。<br>选一个此刻最接近的，曲线会从这里开始。</div>');
+    }
+    h.push('<div class="mood-pick">');
+    for (var i = 0; i < Widgets.MOODS.length; i++) {
+      var m = Widgets.MOODS[i];
+      h.push('<button class="mood-btn' + (m.id === curId ? " on" : "") + '" data-mood="' + m.id + '" type="button"' +
+        ' aria-label="' + m.label + '" title="' + m.label + '">' +
+        UI.icon(m.icon, 22) + "<span>" + m.label + "</span></button>");
+    }
+    h.push("</div>");
+    h.push('<p class="small muted" style="margin:10px 0 0">这不是打分。只是给此刻的自己留一个标记。</p>');
+    h.push("</div>");
+
+    return h.join("");
+  }
+
+  function render() {
+    return todayHtml() +
+      '<div class="sec-head"><h2>全部记录</h2><span class="small muted">' +
+      Store.stats().recordCount + " 条</span></div>" +
+      listHtml();
+  }
+
+  function bind(v) {
+    var btn = UI.$("[data-save-note]", v);
+    var ta = UI.$('[data-field="dailyNote"]', v);
+    if (btn && ta) {
+      btn.addEventListener("click", function () {
+        var txt = ta.value.replace(/^\s+|\s+$/g, "");
+        if (!txt) { UI.toast("写一句就好"); ta.focus(); return; }
+        Store.saveDailyNote(txt);
+        UI.toast("已经记下了");
+        Router.render("notes", {});
+      });
+    }
+
+    var moodBtns = UI.$all("[data-mood]", v);
+    for (var i = 0; i < moodBtns.length; i++) (function (b) {
+      b.addEventListener("click", function () {
+        var m = Widgets.moodById(b.getAttribute("data-mood"));
+        if (!m) return;
+        Store.saveMood(m.id, m.score, m.label);
+        UI.toast("记下了：" + m.label);
+        Router.render("notes", {});
+      });
+    })(moodBtns[i]);
+
+    Widgets.bindGo(v);
+  }
+
+  function rail() {
+    var st = Store.stats();
+    return '<div class="rail-card">' +
+      "<h4>" + UI.icon("pen", 15) + "记录概览</h4>" +
+      '<div class="statrow">' +
+      '<div class="stat"><b>' + st.recordCount + "</b><span>条记录</span></div>" +
+      '<div class="stat"><b>' + st.noteDays + "</b><span>天小记</span></div>" +
+      /* 这里原本显示近 30 天心情均值（3.1 这种数字）。
+         一个带小数点的分数，会让人立刻开始比较「这个月是不是比上个月好」——
+         那正是这套东西不该制造的焦虑。曲线已经把起伏画出来了，
+         所以这里只数次数，不给分。 */
+      '<div class="stat"><b>' + st.moodDays30 + "</b><span>天记了心情</span></div>" +
+      "</div>" +
+      '<p class="rail-note">只是数一数，不是打分。<br>心情的起伏，交给上面那条曲线说。</p>' +
+      "</div>";
+  }
+
+  window.Pages.notes = {
+    title: "记录",
+    render: render, bind: bind,
+    rail: rail, bindRail: function () {}
+  };
+})();
+</script>
+<script>
+/* =========================================================================
+ * 成长空间 · 探索
+ * -------------------------------------------------------------------------
+ * 三块内容自上而下，从「此刻的我」走到「可以去的方向」：
+ *   1. 需求入口   —— 用户带着一个具体感受来，先被听见，再谈下一步
+ *   2. 9 区地图   —— 长期的方向感，双层体系里的上层（4 大门类仍在准备）
+ *   3. 轻量课程   —— 用户自己产生需求之后的下一步，不是入口的终点
+ *
+ * 入口文案刻意不出现任何医学判断、人格类型、觉醒等级。
+ * ========================================================================= */
+(function () {
+  "use strict";
+  window.Pages = window.Pages || {};
+
+  function render() {
+    var st = Store.stats();
+    var explored = Store.settings().explored;
+    var h = [];
+
+    /* ---- 1. 需求入口 ----
+       下面两块都有 sec-head，这一块原本只有一行副标题，
+       卡片就直接贴上来了，读起来像页面开头漏了个标题。 */
+    h.push('<div class="sec-head"><h2>' + UI.esc(TOPICS.heading) + "</h2></div>");
+    h.push('<p class="sec-note">' + UI.esc(TOPICS.sub) + "</p>");
+    h.push('<div class="topic-grid">');
+    for (var i = 0; i < TOPICS.list.length; i++) {
+      var t = TOPICS.list[i];
+      var seen = explored.indexOf(t.id) !== -1;
+      h.push('<button class="topic-card' + (seen ? " seen" : "") + '" data-topic="' + t.id + '" type="button">' +
+        '<span class="tc-ic">' + UI.icon(t.icon, 22) + "</span>" +
+        "<b>" + UI.esc(t.name) + "</b>" +
+        '<span class="tc-sub">' + (seen ? "看过了" : "点进去看看") + "</span>" +
+        "</button>");
+    }
+    h.push("</div>");
+
+    /* ---- 2. 9 区地图 ---- */
+    h.push('<div class="sec-head"><h2>九个成长方向</h2>' +
+      '<span class="small muted">' + st.coursesDone + " / " + st.coursesTotal + " 节</span></div>");
+    h.push('<p class="sec-note">第一阶段先专注中央区。其余方向正在准备，会陆续开放。</p>');
+    h.push(ZoneMap.html());
+
+    /* ---- 3. 轻量课程 ---- */
+    h.push('<div class="sec-head"><h2>可以开始的课</h2>' +
+      '<span class="small muted">' + st.coursesDone + " / " + st.coursesTotal + "</span></div>");
+    if (st.favCount) {
+      h.push('<p class="sec-note">收藏了 ' + st.favCount + " 节，在最上面。带 ★ 的就是。</p>");
+    }
+    h.push(Widgets.lessonList(orderedCourseIds()));
+
+    h.push('<div class="coming-card"><p><b>还有更多方向在准备中</b></p>' +
+      '<p class="muted small">不用急着全部走完。先挑一个此刻最想看的，就很好了。</p></div>');
+
+    h.push('<p class="small muted" style="margin:16px 2px 0;line-height:1.8">' +
+      UI.esc(TOPICS.footNote) + "</p>");
+
+    return h.join("");
+  }
+
+  /* 收藏的课排前面，其余保持原顺序 */
+  function orderedCourseIds() {
+    var cs = window.COURSES || [], favs = Store.favorites(), out = [], i;
+    for (i = 0; i < cs.length; i++) if (favs.indexOf(cs[i].id) !== -1) out.push(cs[i].id);
+    for (i = 0; i < cs.length; i++) if (out.indexOf(cs[i].id) === -1) out.push(cs[i].id);
+    return out;
+  }
+
+  function bind(v) {
+    ZoneMap.bind(v);
+    Widgets.bindGo(v);
+    Widgets.bindLessonRows(v);
+    Widgets.bindFav(v, function () { Router.render("explore", {}); });
+  }
+
+  /* 右栏：收藏。空的时候不放空卡片，直接给一句话。 */
+  function rail() {
+    var favs = Store.favorites();
+    var h = [];
+    h.push('<div class="rail-card">');
+    h.push("<h4>" + UI.icon("star", 15) + "我收藏的</h4>");
+    if (!favs.length) {
+      h.push('<p class="rail-note">还没有收藏。课程行右边的星星，点一下就会出现在这里。</p>');
+    } else {
+      h.push(Widgets.lessonList(favs));
+    }
+    h.push("</div>");
+
+    h.push('<div class="rail-card">');
+    h.push("<h4>" + UI.icon("compass", 15) + "看过哪些方向</h4>");
+    var explored = Store.settings().explored;
+    h.push('<p class="rail-note">' +
+      (explored.length ? explored.length + " / " + TOPICS.list.length + " 个入口看过了" :
+        "还没有点开过任何入口。") + "</p>");
+    h.push("</div>");
+    return h.join("");
+  }
+
+  function bindRail(el) {
+    Widgets.bindLessonRows(el);
+    Widgets.bindFav(el, function () { Router.render("explore", {}); });
+  }
+
+  window.Pages.explore = {
+    title: "探索",
+    render: render, bind: bind,
+    rail: rail, bindRail: bindRail
+  };
+})();
+</script>
+<script>
+/* =========================================================================
+ * 成长空间 · 我的
+ * -------------------------------------------------------------------------
+ * 三件事：我是谁（昵称）+ 我留下了什么（画像与统计）+ 我能改什么（设置）。
+ *
+ * 老用户兼容：v1 是 5 题量表的画像（{state, focus, recommendIds}），
+ * v2 是 15 题生成的《第一次认识自己》（{sections, quote}）。
+ * 两种都在这里能正常显示，老数据【只读保留、绝不主动清空】，
+ * 只给一句软提示问要不要用新的 15 题更新一次。
+ * ========================================================================= */
+(function () {
+  "use strict";
+  window.Pages = window.Pages || {};
+
+  /* ---- v2 画像：分段正文 ---- */
+  function v2Html(rec) {
+    var h = ['<div class="card">'];
+    h.push('<div class="card-head"><h3>' + UI.esc(rec.title || "第一次认识自己") + "</h3>" +
+      '<span class="tag live">15 题版</span></div>');
+    if (rec.quote) h.push('<p class="small muted" style="margin:0 0 4px">' + UI.esc(rec.quote) + "</p>");
+    var secs = rec.sections || [];
+    for (var i = 0; i < secs.length; i++) {
+      h.push('<div class="rec-sec"><h3>' + UI.esc(secs[i].label) + "</h3>" +
+        "<p>" + UI.textLines(secs[i].text) + "</p></div>");
+    }
+    h.push("</div>");
+    return h.join("");
+  }
+
+  /* ---- v1 画像：老的 5 题结果，只读 ---- */
+  function v1Html(pf) {
+    var h = ['<div class="card">'];
+    h.push('<div class="card-head"><h3>你的状态画像</h3><span class="tag">早先做过的一次</span></div>');
+    if (pf.state) h.push('<p class="state-text">' + UI.textLines(pf.state) + "</p>");
+    if (pf.focus && pf.focus.length) {
+      h.push('<div class="focus-label">当时留意到的方向</div>');
+      for (var i = 0; i < pf.focus.length; i++) {
+        h.push('<div class="focus-item">· ' + UI.esc(pf.focus[i]) + "</div>");
+      }
+    }
+    h.push('<p class="small muted" style="margin-top:12px">' +
+      "这一份是早先那版留下的，会一直给你保留着，不会被覆盖掉。</p>");
+    h.push("</div>");
+    return h.join("");
+  }
+
+  function portraitHtml() {
+    var p = Store.getProfile();
+    if (!p || !p.portrait) {
+      return '<div class="empty">' + UI.icon("sprout", 30) +
+        "<b>还没有认识过自己</b>" +
+        "<p>用 15 个问题，花几分钟看看现在的自己。<br>写下来的东西只会留在你的浏览器里。</p>" +
+        '<button class="btn primary" data-go="questionnaire" type="button">开始探索</button></div>';
+    }
+    var rec = p.portrait;
+    return rec.sections ? v2Html(rec) : v1Html(rec);
+  }
+
+  function render() {
+    var p = Store.getProfile() || {};
+    var st = Store.stats();
+    var nick = p.nickname || "";
+    var v = Store.answersVersion();
+    var h = [];
+
+    /* 头部 */
+    h.push('<div class="me-head">' +
+      '<div class="me-avatar">' + UI.esc(nick ? nick.charAt(0) : "你") + "</div>" +
+      "<div><h1>" + (nick ? UI.esc(nick) : "还没有起名字") + "</h1>" +
+      '<p class="sub">' + (st.hasFirstRecord ? "你已经认真看过自己一次了。" : "慢慢来，不着急。") + "</p>" +
+      "</div></div>");
+
+    /* 统计 */
+    h.push('<div class="statgrid">' +
+      '<div class="stat"><b>' + st.recordCount + "</b><span>条记录</span></div>" +
+      '<div class="stat"><b>' + st.noteDays + "</b><span>天小记</span></div>" +
+      '<div class="stat"><b>' + st.streak + "</b><span>连续天数</span></div>" +
+      '<div class="stat"><b>' + st.favCount + "</b><span>收藏</span></div>" +
+      "</div>");
+
+    /* 画像 */
+    h.push('<div class="sec-head"><h2>我的画像</h2></div>');
+    h.push(portraitHtml());
+
+    /* 老数据软提示：只问，不替换 */
+    if (v === 1) {
+      h.push('<div class="card" style="border-color:var(--brand-line)">' +
+        "<h3>要不要用新的 15 题再认识一次？</h3>" +
+        '<p class="small muted">新的版本会更贴近你此刻的状态。做完之后，上面那份旧的仍然会留着。</p>' +
+        '<div class="btnrow"><button class="btn primary" data-go="questionnaire" type="button">重新认识一次</button></div>' +
+        "</div>");
+    } else if (v === 2) {
+      h.push('<div class="btnrow"><button class="btn ghost" data-go="questionnaire" type="button">重新做一次</button></div>');
+    }
+
+    /* 收藏 */
+    var favs = Store.favorites();
+    if (favs.length) {
+      h.push('<div class="sec-head"><h2>我收藏的课</h2></div>');
+      h.push(Widgets.lessonList(favs));
+    }
+
+    /* 设置 */
+    var s = Store.settings();
+    h.push('<div class="sec-head"><h2>设置</h2></div>');
+    h.push('<div class="card">');
+
+    h.push('<div class="set-row"><div class="sr-label">昵称' +
+      "<small>只用在问候里</small></div>" +
+      '<button class="btn ghost" data-set-nick="1" type="button" style="min-height:38px;padding:0 16px;font-size:13.5px">修改</button></div>');
+
+    h.push('<div class="set-row"><div class="sr-label">每天提醒我一下' +
+      "<small>这个网页没有后台，做不到到点自己弹出来。<br>只能在你打开它的时候，温和地提一句。</small></div>" +
+      '<button class="switch' + (s.remind.on ? " on" : "") + '" data-toggle-remind="1" type="button" ' +
+      'role="switch" aria-checked="' + (s.remind.on ? "true" : "false") + '" ' +
+      'aria-label="每天提醒我一下"></button></div>');
+
+    h.push('<div class="set-row"><div class="sr-label">我用过的功能' +
+      "<small>认识自己、小记、心情、收藏、探索入口</small></div>" +
+      '<span class="sr-val">' + st.recordCount + " 条记录</span></div>");
+
+    h.push("</div>");
+
+    h.push('<div class="card">' +
+      "<h3>关于数据</h3>" +
+      '<p class="small muted">所有内容都只存在你这台设备的浏览器里。没有账号、不上传、不同步。' +
+      "换一台设备或换一个浏览器，这里是空的。</p>" +
+      '<div class="btnrow"><button class="btn ghost" data-reset="1" type="button">清空所有数据</button></div>' +
+      "</div>");
+
+    h.push('<div class="rail-quiet">成长空间 v7 · 纯本地运行<br>不是诊断工具，也不替代任何专业帮助。</div>');
+
+    return h.join("");
+  }
+
+  function bind(v) {
+    Widgets.bindGo(v);
+    Widgets.bindLessonRows(v);
+    Widgets.bindFav(v, function () { Router.render("me", {}); });
+
+    var nick = UI.$("[data-set-nick]", v);
+    if (nick) nick.addEventListener("click", function () {
+      Router.navigate("nickname", { edit: 1 });
+    });
+
+    var sw = UI.$("[data-toggle-remind]", v);
+    if (sw) sw.addEventListener("click", function () {
+      var s = Store.settings();
+      s.remind.on = !s.remind.on;
+      Store.saveSettings(s);
+      sw.classList.toggle("on", s.remind.on);
+      sw.setAttribute("aria-checked", s.remind.on ? "true" : "false");
+      UI.toast(s.remind.on ? "好，你打开它的时候我会提一句" : "已关闭");
+    });
+
+    var rst = UI.$("[data-reset]", v);
+    if (rst) rst.addEventListener("click", function () {
+      if (!window.confirm("会清空这台设备上的全部记录，且无法恢复。确定吗？")) return;
+      Store.resetAll();
+      UI.toast("已经清空了");
+      Router.navigate("home", {});
+    });
+  }
+
+  function rail() {
+    var st = Store.stats();
+    return '<div class="rail-card">' +
+      "<h4>" + UI.icon("user", 15) + "这些数字" +
+      "</h4>" +
+      '<div class="statrow">' +
+      '<div class="stat"><b>' + st.coursesDone + "</b><span>节课程</span></div>" +
+      '<div class="stat"><b>' + st.practiceDone + "</b><span>次练习</span></div>" +
+      '<div class="stat"><b>' + st.thisWeek + "</b><span>本周记录</span></div>" +
+      "</div>" +
+      '<p class="rail-note">数字只是痕迹，不是成绩。</p>' +
+      "</div>";
+  }
+
+  window.Pages.me = {
+    title: "我的",
+    render: render, bind: bind,
+    rail: rail, bindRail: function () {}
+  };
+})();
+</script>
+<script>
+/* =========================================================================
+ * 成长空间 · 15 题｜第一次认识自己
+ * -------------------------------------------------------------------------
+ * 一次一题，点选项就往下走。没有分数、没有等级、没有类型。
+ *
+ * 刻意的设计选择：
+ *   - 进度用「03 / 15」和一条极细的线，不用粗百分比条 —— 粗条会把这件事
+ *     变成「完成任务」，而它应该是「停下来看看自己」。
+ *   - 选项不标对错，选完不立刻给反馈，不制造「答得好不好」的压力。
+ *   - 最后两题可以留空直接跳过，跳过不等于失败。
+ *   - 课程入口只在【完成之后】出现，而且只是「可以继续看的方向」，
+ *     不是「你需要买课才能解决」。
+ *
+ * 答案里的 tone 是内部权重，只用于生成完成页那句温和的观察，绝不渲染。
+ * ========================================================================= */
+(function () {
+  "use strict";
+  window.Pages = window.Pages || {};
+
+  var Q = null;                 /* QUESTIONNAIRE，延迟取，保证脚本顺序无关 */
+  var S = { i: 0, answers: {}, rec: null };
+
+  function qs() { return Q || (Q = window.QUESTIONNAIRE); }
+
+  function reset() { S = { i: 0, answers: {}, rec: null }; }
+
+  /* 维度 -> 一个可以继续看的需求入口。只是给个方向，不是结论。 */
+  var DIM_TOPIC = {
+    understand: "knowself",
+    emotion: "anxiety",
+    relation: "tired",
+    action: "nothing",
+    self: "irritable",
+    thinking: "racing"
+  };
+
+  /* ---------------------------------------------------------------------
+   * 答题页
+   * ------------------------------------------------------------------- */
+  function questionHtml() {
+    var list = qs().questions, q = list[S.i];
+    var h = [];
+
+    h.push('<div class="q-flow">');
+    /* 进度：细线 + 计数，两条都不带百分比数字 */
+    h.push('<div class="q-bar"><i style="width:' + Math.round(S.i / list.length * 100) + '%"></i></div>');
+    h.push('<p class="q-count">' + UI.courseNo(q.no) + " / " + list.length + "</p>");
+    h.push('<p class="q-text">' + UI.esc(q.text) + "</p>");
+    h.push('<p class="q-hint">' + (q.kind === "text" ? "可以写，也可以跳过。" : "选最接近现在的你就好，没有对错。") + "</p>");
+
+    if (q.kind === "choice") {
+      h.push('<div class="q-opts">');
+      for (var i = 0; i < q.options.length; i++) {
+        var o = q.options[i];
+        var on = S.answers[q.key] === o.v;
+        h.push('<button class="q-opt' + (on ? " on" : "") + '" data-pick="' + o.v + '" type="button">' +
+          '<span class="q-key">' + o.v + "</span><span>" + UI.esc(o.text) + "</span></button>");
+      }
+      h.push("</div>");
+    } else {
+      h.push('<textarea class="q-text-input" data-field="free" placeholder="' +
+        UI.esc(q.placeholder || "") + '">' + UI.esc(S.answers[q.key] || "") + "</textarea>");
+    }
+
+    h.push('<div class="q-nav">');
+    h.push(S.i > 0
+      ? '<button class="link" data-prev="1" type="button">‹ 上一题</button>'
+      : "<span></span>");
+    if (q.kind === "text") {
+      h.push('<button class="btn primary" data-next="1" type="button">' +
+        (S.i === list.length - 1 ? "写完了" : "下一题") + "</button>");
+    } else if (S.answers[q.key]) {
+      h.push('<button class="btn ghost" data-next="1" type="button">下一题</button>');
+    } else {
+      h.push("<span></span>");
+    }
+    h.push("</div>");
+
+    h.push('<p class="small muted center" style="margin-top:18px">' +
+      "这些回答只留在这台设备上，不会上传，也不会有人看到。</p>");
+    h.push("</div>");
+    return h.join("");
+  }
+
+  /* ---------------------------------------------------------------------
+   * 完成页
+   * ------------------------------------------------------------------- */
+  function doneHtml() {
+    var rec = S.rec, h = [];
+    var top = rec.dims && rec.dims.length ? rec.dims[0] : null;
+    var topic = top ? TOPICS.byId(DIM_TOPIC[top]) : null;
+
+    h.push('<div class="q-flow">');
+    h.push('<div class="done-head">' +
+      '<div class="done-mark">' + UI.icon("sprout", 28) + "</div>" +
+      "<h2>" + UI.esc(qs().done.title) + "</h2>" +
+      "<p>" + UI.textLines(qs().done.subtitle) + "</p></div>");
+
+    h.push('<div class="rec-sec quote" style="margin-top:20px">' +
+      '<h3>此刻的你</h3><p>' + UI.textLines(window.Record.summary(rec)) + "</p></div>");
+
+    h.push('<div class="card">' +
+      '<p class="small muted" style="margin:0">你写下的这些，已经收进「记录」里，' +
+      "也会成为「成长轨迹」的第一个节点。以后随时可以回来看。</p>" +
+      '<div class="btnrow">' +
+      '<button class="btn primary" data-open-record="' + UI.esc(rec.entryId || "") + '" type="button">看完整的一份</button>' +
+      '<button class="btn ghost" data-go="trace" type="button">去成长轨迹</button>' +
+      "</div></div>");
+
+    if (topic) {
+      h.push('<div class="sec-head"><h2>如果你想继续往前一步</h2></div>');
+      h.push('<p class="sec-note">不是必须。只是如果你愿意，这里有一个方向。</p>');
+      h.push('<button class="topic-card" data-topic="' + topic.id + '" type="button">' +
+        '<span class="tc-ic">' + UI.icon(topic.icon, 22) + "</span>" +
+        "<b>" + UI.esc(topic.name) + "</b>" +
+        '<span class="tc-sub">' + UI.esc(topic.echo) + "</span></button>");
+      h.push('<div style="margin-top:12px">' + Widgets.lessonList(topic.courses) + "</div>");
+      h.push('<p class="small muted" style="margin:10px 2px 0;line-height:1.8">' +
+        "今天不想做任何事，也完全可以。这一份记录已经留下了。</p>");
+    }
+
+    h.push('<div class="btnrow" style="margin-top:20px">' +
+      '<button class="btn ghost" data-go="home" type="button">先回首页</button></div>');
+    h.push("</div>");
+    return h.join("");
+  }
+
+  function render() {
+    return S.rec ? doneHtml() : questionHtml();
+  }
+
+  function bind(v) {
+    if (S.rec) { bindDone(v); return; }
+    bindQuestion(v);
+  }
+
+  function bindQuestion(v) {
+    var list = qs().questions, q = list[S.i];
+
+    var opts = UI.$all("[data-pick]", v);
+    for (var i = 0; i < opts.length; i++) (function (b) {
+      b.addEventListener("click", function () {
+        S.answers[q.key] = b.getAttribute("data-pick");
+        next();
+      });
+    })(opts[i]);
+
+    var nxt = UI.$("[data-next]", v);
+    if (nxt) nxt.addEventListener("click", function () {
+      if (q.kind === "text") {
+        var ta = UI.$('[data-field="free"]', v);
+        S.answers[q.key] = ta ? ta.value.replace(/^\s+|\s+$/g, "") : "";
+      }
+      next();
+    });
+
+    var prv = UI.$("[data-prev]", v);
+    if (prv) prv.addEventListener("click", function () {
+      /* 回上一题时把当前这题的输入也保住，不然回头一看白写了 */
+      if (q.kind === "text") {
+        var ta2 = UI.$('[data-field="free"]', v);
+        if (ta2) S.answers[q.key] = ta2.value.replace(/^\s+|\s+$/g, "");
+      }
+      S.i = Math.max(0, S.i - 1);
+      Router.render("questionnaire", {});
+    });
+  }
+
+  function next() {
+    var list = qs().questions;
+    if (S.i < list.length - 1) {
+      S.i++;
+      Router.render("questionnaire", {});
+      return;
+    }
+    /* 最后一题：生成记录。
+       注意顺序 —— 先生成再渲染，否则完成页拿不到 rec。 */
+    S.rec = Store.saveAssessment(S.answers);
+    Router.render("questionnaire", {});
+  }
+
+  function bindDone(v) {
+    Widgets.bindGo(v);
+    Widgets.bindLessonRows(v);
+
+    var open = UI.$("[data-open-record]", v);
+    if (open) open.addEventListener("click", function () {
+      var id = open.getAttribute("data-open-record");
+      /* 先把流程状态清掉，再回首页、再压入记录详情。
+         这样在记录页按返回，落在的是首页，而不是一个已经做完了的答题页。 */
+      reset();
+      Router.navigate("home", {});
+      Router.navigate("record", { id: id });
+    });
+  }
+
+  window.Pages.questionnaire = {
+    hideTab: true,
+    title: function () { return S.rec ? "第一次认识自己" : "认识自己"; },
+    render: render,
+    bind: bind,
+    /* 从别处再次进入时重置，避免上次的完成页残留 */
+    enter: reset
+  };
+})();
+</script>
+<script>
+/* =========================================================================
+ * 成长空间 · 单条成长记录详情
+ * -------------------------------------------------------------------------
+ * 目前唯一可点开回看的是《第一次认识自己》。
+ * 正文用 UI.textLines（转义后保留换行）——规则生成的段落里有 \n，
+ * 直接塞进 <p> 会被 HTML 折叠成一行。
+ * ========================================================================= */
+(function () {
+  "use strict";
+  window.Pages = window.Pages || {};
+
+  function findEntry(id) {
+    var j = Store.journal();
+    for (var i = 0; i < j.length; i++) if (j[i].id === id) return j[i];
+    return null;
+  }
+
+  function render(params) {
+    var e = params && params.id ? findEntry(params.id) : null;
+    if (!e) {
+      return '<div class="empty">' + UI.icon("pen", 30) +
+        "<b>没有找到这条记录</b><p>它可能已经被清空了。</p>" +
+        '<button class="btn ghost" data-go="trace" type="button">去成长轨迹</button></div>';
+    }
+
+    var rec = e.meta && e.meta.record ? e.meta.record : null;
+    var h = [];
+
+    h.push('<div class="done-head" style="padding-top:6px">' +
+      '<div class="done-mark">' + UI.icon("sprout", 28) + "</div>" +
+      "<h2>" + UI.esc(e.note || "成长记录") + "</h2>" +
+      '<p class="muted small">' + UI.esc(UI.dotDate(e.date)) + " " + UI.esc(UI.weekday(e.date)) + "</p>" +
+      "</div>");
+
+    if (!rec) {
+      h.push('<div class="card"><p>' + UI.textLines(e.note || "") + "</p></div>");
+      return h.join("");
+    }
+
+    if (rec.quote) {
+      h.push('<div class="rec-sec quote"><h3>那天</h3><p>' + UI.esc(rec.quote) + "</p></div>");
+    }
+
+    var secs = rec.sections || [];
+    for (var i = 0; i < secs.length; i++) {
+      h.push('<div class="rec-sec"><h3>' + UI.esc(secs[i].label) + "</h3>" +
+        "<p>" + UI.textLines(secs[i].text) + "</p></div>");
+    }
+
+    if (rec.dimNames) {
+      h.push('<div class="rec-sec"><h3>当时留意到的方向</h3>' +
+        '<div class="chips">' +
+        '<span class="chip ok">' + UI.esc(rec.dimNames) + "</span>" +
+        "</div></div>");
+    }
+
+    h.push('<div class="rail-quiet">这是那时候的你写下的。<br>现在再看，感觉可能已经不一样了。</div>');
+    h.push('<div class="btnrow" style="margin-top:16px">' +
+      '<button class="btn ghost" data-go="trace" type="button">回到成长轨迹</button></div>');
+
+    return h.join("");
+  }
+
+  function bind(v) { Widgets.bindGo(v); }
+
+  window.Pages.record = {
+    hideTab: true,
+    title: "成长记录",
+    render: render, bind: bind
+  };
+})();
+</script>
+<script>
+/* =========================================================================
+ * 成长空间 · 单个探索入口
+ * -------------------------------------------------------------------------
+ * 这一页的顺序是刻意的：先「被听见」，再「可以往哪走」。
+ *
+ * 用户点进来是因为有一个具体的感受，不是来买东西的。
+ * 所以先把那句话还给他，再给方向，最后一定要留一个「今天什么都不做也行」的出口。
+ *
+ * 【没有】任何诊断、评估、人格类型、严重程度判断。
+ * ========================================================================= */
+(function () {
+  "use strict";
+  window.Pages = window.Pages || {};
+
+  function render(params) {
+    var t = params && params.id ? TOPICS.byId(params.id) : null;
+    if (!t) {
+      return '<div class="empty">' + UI.icon("compass", 30) +
+        "<b>没有找到这个入口</b><p>回探索页看看别的方向。</p>" +
+        '<button class="btn ghost" data-go="explore" type="button">去探索</button></div>';
+    }
+    /* 看过就记一笔。刻意不写进 journal —— 浏览入口不算成长活动，
+       不该影响连续天数。 */
+    Store.markExplored(t.id);
+
+    var h = [];
+    h.push('<div class="card" style="border-color:var(--brand-line)">' +
+      '<span class="tc-ic" style="display:block;color:var(--brand);margin-bottom:10px">' +
+      UI.icon(t.icon, 26) + "</span>" +
+      "<h3>" + UI.esc(t.name) + "</h3>" +
+      '<p class="state-text">' + UI.esc(t.echo) + "</p>" +
+      '<p class="small muted" style="margin-top:12px">' +
+      "这里是很多人在某个阶段都会有过的感受。它不代表你有什么问题。</p>" +
+      "</div>");
+
+    h.push('<div class="sec-head"><h2>如果想往前看一看</h2></div>');
+    h.push('<p class="sec-note">这两节可能和此刻的你有关。不用一次看完。</p>');
+    h.push(Widgets.lessonList(t.courses));
+
+    h.push('<div class="coming-card" style="margin-top:6px">' +
+      "<p><b>今天什么都不想做，也可以。</b></p>" +
+      '<p class="muted small">把这一页关掉，去喝杯水、走一走，也是照顾自己的一种方式。</p>' +
+      "</div>");
+
+    h.push('<div class="btnrow" style="margin-top:16px">' +
+      '<button class="btn ghost" data-go="explore" type="button">看看别的方向</button></div>');
+
+    h.push('<p class="small muted" style="margin:16px 2px 0;line-height:1.8">' +
+      "如果你正经历持续的困扰，找信任的人聊一聊，会比任何网页都更有帮助。</p>");
+
+    return h.join("");
+  }
+
+  function bind(v) {
+    Widgets.bindGo(v);
+    Widgets.bindLessonRows(v);
+    Widgets.bindFav(v, function () { Router.render("topic", Router.current().params); });
+  }
+
+  window.Pages.topic = {
     hideTab: true,
     title: function (p) {
-      var r = GData.regionById(p.id); return r ? r.name : "成长方向";
+      var t = TOPICS.byId(p.id);
+      return t ? t.name : "探索";
     },
-    render: function (p) {
-      var r = GData.regionById(p.id);
-      if (!r) return '<p>没有这个区域。</p>';
-      var h = [];
-      h.push('<section class="card">' +
-        '<div class="zone-head"><h2>' + UI.esc(r.name) + '</h2>' +
-        '<span class="tag ' + r.status + '">' + zoneStatusText(r) + '</span></div>' +
-        '<p class="sub">' + UI.esc(r.intro) + '</p></section>');
-
-      /* 子主题模块 */
-      h.push('<section class="mods"><div class="label">这个方向包含</div>');
-      for (var i = 0; i < r.subTopics.length; i++) {
-        h.push('<div class="mod' + (r.status === "live" ? "" : " soon") + '"><span class="dot"></span>' +
-          UI.esc(r.subTopics[i]) +
-          (r.status === "soon" ? '<span class="soon-tag">1 课时 · 即将开放</span>' : "") +
-          '</div>');
-      }
-      h.push('</section>');
-
-      if (r.status === "live") {
-        var cs = Course.ofRegion(r.id);
-        h.push('<section class="lessons"><div class="label">本区课程</div>');
-        for (var k = 0; k < cs.length; k++) {
-          var c = cs[k], done = Store.isDone(c.id);
-          h.push(lessonRow(c, done, true));
-        }
-        h.push('</section>');
-      } else {
-        h.push('<section class="coming-card"><p>这个区域正在认真准备中。</p><p class="muted small">第一阶段建议先把中央区走完，其余方向会陆续在这里开放。</p></section>');
-      }
-      return h.join("");
-    },
-    bind: function (v) {
-      bindLessonRows(v);
-    }
+    render: render, bind: bind
   };
-
-  function lessonRow(c, done, clickable) {
-    var mark = done ? "done" : (Store.courseState(c.id) === "started" ? "doing" : "");
-    var label = done ? "已完成" : Store.courseState(c.id) === "started" ? "继续" : "开始";
-    return '<div class="lesson-row ' + mark + '" data-go-lesson="' + c.id + '" role="button">' +
-      '<div class="lr-main"><span class="lr-no">' + (c.order < 10 ? "0" : "") + c.order + '</span>' +
-      '<div class="lr-text"><b>' + UI.esc(c.title) + '</b><span class="muted small">预计 ' + c.minutes + ' 分钟' + (done ? " · 已完成" : "") + '</span></div></div>' +
-      '<span class="lr-cta">' + label + ' →</span></div>';
-  }
-
-  /* 供课程列表页复用：把页面里的课程行绑上进入学习 */
-  function bindLessonRows(v) {
-    var rows = UI.$all("[data-go-lesson]", v);
-    for (var i = 0; i < rows.length; i++) (function (b) {
-      b.addEventListener("click", function () {
-        var id = b.getAttribute("data-go-lesson");
-        Store.markStarted(id);
-        Router.navigate("lesson", { id: id });
-      });
-    })(rows[i]);
-  }
-  window.bindLessonRows = bindLessonRows;
 })();
 </script>
-  <script>
+<script>
 /* =========================================================================
- * 课程（Tab）：第一阶段课程列表
+ * 成长空间 · 第一次问昵称
+ * -------------------------------------------------------------------------
+ * 只问一次，可以跳过。存的是 gs.profile.nickname，
+ * 刻意【不】顺手把 done 设成 true —— 昵称和「做过 15 题」是两件事，
+ * 混在一起会让「我的」页误以为用户已经认识过自己。
+ *
+ * 从「我的」页进来是修改模式（params.edit），文案和落点都不一样。
  * ========================================================================= */
 (function () {
   "use strict";
   window.Pages = window.Pages || {};
 
-  Pages.course = {
-    title: "课程",
-    render: function () {
-      var st = Store.stats();
-      var cs = COURSES;
-      var pct = st.coursesTotal ? Math.round(st.coursesDone / st.coursesTotal * 100) : 0;
-      var h = [];
-      h.push('<p class="page-intro">第一阶段 · 中央区「自我认知与反应」。5 节小课，每节 6–8 分钟，按顺序一节一节来就好。</p>');
-      h.push('<div class="bar mini"><i style="width:' + pct + '%"></i></div>');
-      h.push('<p class="muted small center">' + st.coursesDone + ' / ' + st.coursesTotal + ' 节已完成</p>');
-      for (var i = 0; i < cs.length; i++) {
-        var c = cs[i], done = Store.isDone(c.id);
-        var mark = done ? "done" : (Store.courseState(c.id) === "started" ? "doing" : "");
-        var label = done ? "已完成" : Store.courseState(c.id) === "started" ? "继续 →" : "开始 →";
-        h.push('<div class="lesson-row ' + mark + '" data-go-lesson="' + c.id + '" role="button">' +
-          '<div class="lr-main"><span class="lr-no">0' + c.order + '</span>' +
-          '<div class="lr-text"><b>' + UI.esc(c.title) + '</b>' +
-          '<span class="muted small">预计 ' + c.minutes + ' 分钟' + (done ? " · 已完成 ✓" : "") + '</span></div></div>' +
-          '<span class="lr-cta">' + label + '</span></div>');
-      }
-      return h.join("");
-    },
-    bind: function (v) { window.bindLessonRows(v); }
-  };
-})();
-</script>
-  <script>
-/* =========================================================================
- * 练习（Tab）：今日练习 + 全部练习 + 练习记录历史
- * ========================================================================= */
-(function () {
-  "use strict";
-  window.Pages = window.Pages || {};
+  function render(params) {
+    var edit = !!(params && params.edit);
+    var cur = Store.nickname();
+    var h = [];
 
-  Pages.practice = {
-    title: "练习",
-    render: function () {
-      var st = Store.stats();
-      var recId = Store.nextCourseId();
-      var rec = recId ? Course.byId(recId) : null;
-      var h = [];
-      h.push('<p class="page-intro">练习跟着课程走：读完一节，再做一次小练习。练习会自动记入你的成长记录。</p>');
+    h.push('<div class="nick-wrap">');
+    h.push('<div class="nick-mark">' + UI.icon("sprout", 28) + "</div>");
 
-      if (rec) {
-        h.push('<section class="card today-practice">' +
-          '<div class="card-head"><span class="label">今日练习</span><span class="muted">第 ' + rec.order + ' 节 · ' + rec.minutes + ' 分钟</span></div>' +
-          '<h3>' + UI.esc(rec.practice.title) + '</h3>' +
-          '<ol class="steps">');
-        var steps = rec.practice.steps;
-        for (var s = 0; s < steps.length; s++) h.push('<li>' + UI.esc(steps[s]) + '</li>');
-        h.push('</ol><button class="btn primary wide" data-go-lesson="' + rec.id + '">去做这节练习</button></section>');
-      } else {
-        h.push('<section class="card done-card"><h3>第一阶段练习都完成啦</h3>' +
-          '<p>随时可以回来重做任一节练习，或到档案里回顾之前的记录。</p></section>');
-      }
-
-      /* 全部练习 */
-      h.push('<section class="card"><div class="card-head"><span class="label">全部练习</span></div>');
-      var cs = COURSES;
-      for (var i = 0; i < cs.length; i++) {
-        var c = cs[i];
-        var practiced = Store.isDone(c.id);
-        h.push('<div class="lesson-row ' + (practiced ? "done" : "") + '" data-go-lesson="' + c.id + '" role="button">' +
-          '<div class="lr-main"><div class="lr-text"><b>' + UI.esc(c.practice.title) + '</b>' +
-          '<span class="muted small">' + UI.esc(c.title) + (practiced ? " · 已完成 ✓" : "") + '</span></div></div>' +
-          '<span class="lr-cta">' + (practiced ? "重做 →" : "去练 →") + '</span></div>');
-      }
-      h.push('</section>');
-
-      /* 历史 */
-      var arr = Store.practices();
-      h.push('<section class="card"><div class="card-head"><span class="label">练习记录</span><span class="muted">共 ' + arr.length + ' 次</span></div>');
-      if (!arr.length) {
-        h.push('<p class="muted small">还没有练习记录。完成第一节课后，这里会出现你的第一次练习。</p>');
-      } else {
-        h.push('<ul class="timeline">');
-        for (var k = 0; k < Math.min(arr.length, 30); k++) {
-          var it = arr[k];
-          h.push('<li><span class="tl-date">' + UI.friendlyDate(it.date) + '</span>' +
-            '<div class="tl-main"><b>' + UI.esc(courseTitleOf(it.courseId)) + '</b>' +
-            (it.note ? '<p class="note">' + UI.esc(it.note) + '</p>' : '<p class="note muted">·</p>') +
-            '</div></li>');
-        }
-        h.push('</ul>');
-      }
-      h.push('</section>');
-      return h.join("");
-    },
-    bind: function (v) {
-      var els = UI.$all("[data-go-lesson]", v);
-      for (var i = 0; i < els.length; i++) (function (b) {
-        b.addEventListener("click", function () {
-          var id = b.getAttribute("data-go-lesson");
-          Store.markStarted(id);
-          Router.navigate("lesson", { id: id });
-        });
-      })(els[i]);
+    if (edit) {
+      h.push("<h2>换个称呼</h2>");
+      h.push('<p class="nick-sub">想叫什么都可以，留空就是不加称呼。</p>');
+    } else {
+      h.push("<h2>该怎么称呼你？</h2>");
+      h.push('<p class="nick-sub">只是想让这里看起来不那么陌生。<br>' +
+        "随便写一个就好，也可以跳过。</p>");
     }
-  };
 
-  function courseTitleOf(id) {
-    var c = Course.byId(id);
-    return c ? "《" + c.title + "》" : "练习";
+    h.push('<input type="text" data-field="nick" maxlength="12" ' +
+      'placeholder="写一个称呼" value="' + UI.esc(cur) + '" ' +
+      'autocomplete="off" aria-label="昵称">');
+
+    h.push('<div class="btnrow" style="margin-top:18px">' +
+      '<button class="btn primary" data-save-nick="1" type="button">' +
+      (edit ? "保存" : "就这样开始") + "</button></div>");
+
+    /* 示例入口和「先跳过」并列，而且放在后面：
+       先跳过是「不想写名字」，先看看示例是「还不知道这是干嘛的」——
+       后者才是第一次打开的人真正的问题，所以给它一个出口。 */
+    if (!edit) {
+      h.push('<p class="center nick-alt" style="margin-top:14px">' +
+        '<button class="link small" data-skip="1" type="button">先跳过</button>' +
+        '<span class="nick-sep" aria-hidden="true">·</span>' +
+        '<button class="link small" data-demo="1" type="button">先看看示例</button>' +
+        "</p>");
+    }
+
+    h.push('<p class="small muted center" style="margin-top:22px;line-height:1.8">' +
+      "只存在这台设备上。<br>没有账号，也不会被上传。</p>");
+    h.push("</div>");
+
+    return h.join("");
   }
+
+  function bind(v, params) {
+    var edit = !!(params && params.edit);
+    var input = UI.$('[data-field="nick"]', v);
+    var save = UI.$("[data-save-nick]", v);
+
+    function commit(next) {
+      var name = input ? input.value : "";
+      Store.saveNickname(name);
+      UI.toast(name.replace(/^\s+|\s+$/g, "") ? "好，就这样叫你" : "好，那就不加称呼");
+      /* 修改模式回「我的」，首次进来去首页 */
+      Router.navigate(edit ? "me" : "home", {});
+    }
+
+    if (save) save.addEventListener("click", function () { commit(); });
+    if (input) input.addEventListener("keydown", function (e) {
+      if (e.key === "Enter" || e.keyCode === 13) { e.preventDefault(); commit(); }
+    });
+
+    var skip = UI.$("[data-skip]", v);
+    if (skip) skip.addEventListener("click", function () {
+      Store.saveNickname("");
+      Router.navigate("home", {});
+    });
+
+    if (input) {
+      /* 移动端键盘弹起会顶掉半屏，聚焦后滚一下，别让输入框被挡住 */
+      try { input.focus({ preventScroll: true }); } catch (err) { input.focus(); }
+    }
+  }
+
+  window.Pages.nickname = {
+    hideTab: true,
+    hideBar: true,
+    title: "称呼",
+    render: render, bind: bind
+  };
 })();
 </script>
-  <script>
+<script>
 /* =========================================================================
  * 课程学习页：阅读 → 今日练习 → 自我反思 → 完成/保存 → 完成反馈
  * 数据在“完成”那一刻一次性写入（课程进度 + 练习 + 成长记录）。
@@ -1446,7 +4241,12 @@ textarea:focus{border-color:#c4d6cb;background:#fff}
 
     /* 头信息 */
     h.push('<div class="lesson-head">');
-    h.push('<div class="lh-meta"><span class="tag ok">中央区 · 自我认知与反应</span><span class="muted">预计 ' + c.minutes + ' 分钟</span></div>');
+    /* 区域名从数据里取，不再写死「中央区 · 自我认知与反应」——
+       一旦往别的门类加课，写死的那行会把所有课都标成中央区。 */
+    var region = (window.GData && GData.regionById) ? GData.regionById(c.regionId) : null;
+    var regionName = region ? region.name : "成长方向";
+    h.push('<div class="lh-meta"><span class="tag ok">' + UI.esc(regionName) + ' · 第 ' + UI.courseNo(c.order) +
+      ' 节</span><span class="muted">预计 ' + c.minutes + ' 分钟</span></div>');
     h.push('<h2>' + UI.esc(c.title) + '</h2>');
     h.push('<p class="sub">' + UI.esc(c.summary) + '</p>');
     if (done && s.stage < 3) h.push('<div class="ribbon">已完成 ✓ · 可以复习，或再做一次练习/反思</div>');
@@ -1492,7 +4292,7 @@ textarea:focus{border-color:#c4d6cb;background:#fff}
       h.push('<div class="btnrow">');
       h.push('<button class="btn primary" id="goHome">回首页</button>');
       if (next) h.push('<button class="btn ghost" id="goNext">下一节</button>');
-      h.push('<button class="btn ghost" id="goArchive">我的档案</button>');
+      h.push('<button class="btn ghost" id="goTrace">成长轨迹</button>');
       h.push('</div></section>');
     }
 
@@ -1550,15 +4350,15 @@ textarea:focus{border-color:#c4d6cb;background:#fff}
       var nx = Course.nextAfter(cur.id);
       if (nx) Router.render("lesson", { id: nx.id });
     });
-    var arch = UI.$("#goArchive", UI.$("#view"));
-    if (arch) arch.addEventListener("click", function () { Router.navigate("archive"); });
+    var tr = UI.$("#goTrace", UI.$("#view"));
+    if (tr) tr.addEventListener("click", function () { Router.navigate("trace"); });
   }
 
   Pages.lesson = {
     hideTab: true,
     title: function (p) {
       var c = Course.byId(p.id);
-      return c ? "第 " + c.order + " 节" : "课程";
+      return c ? "第 " + UI.courseNo(c.order) + " 节" : "课程";
     },
     render: function (p) {
       var c = Course.byId(p.id) || COURSES[0];
@@ -1569,283 +4369,202 @@ textarea:focus{border-color:#c4d6cb;background:#fff}
   };
 })();
 </script>
-  <script>
+<script>
 /* =========================================================================
- * 我的成长档案：当前状态 / 统计 / 已完成课程 / 成长记录时间线 / 阶段复盘
+ * 成长空间 · 9 区地图 + 单个方向详情
+ * -------------------------------------------------------------------------
+ * 9 区从「一个 tab」降级成「探索页里的一个区块」——它仍然必须被渲染出来。
+ * js/data/regions.js 的 9 个对象、顺序、pos、id 一行不动，这里只负责画。
+ *
+ * ZoneMap 是给别处复用的：探索页把地图直接嵌进去。
  * ========================================================================= */
 (function () {
   "use strict";
   window.Pages = window.Pages || {};
 
-  function journalLabel(t) {
-    return { assessment: "成长状态自评", course: "完成课程", practice: "做了一次练习" }[t] || "成长记录";
+  function zoneStatusText(r) {
+    return r.status === "live" ? "可学习" : "即将开放";
   }
 
-  Pages.archive = {
-    title: "我的档案",
-    render: function () {
-      var prof = Store.getProfile();
-      var st = Store.stats();
+  function doneOf(regionId) {
+    var cs = window.Course ? Course.ofRegion(regionId) : [];
+    var done = 0;
+    for (var i = 0; i < cs.length; i++) if (Store.isDone(cs[i].id)) done++;
+    return { done: done, total: cs.length };
+  }
+
+
+  var ZoneMap = {
+    html: function () {
+      var cells = [], R = GData.regions;
+      for (var i = 0; i < R.length; i++) {
+        var r = R[i], live = r.status === "live";
+        var count = "";
+        if (live) {
+          var d = doneOf(r.id);
+          count = '<span class="zc-count">' + d.done + " / " + d.total + "</span>";
+        }
+        cells.push('<a class="zone-cell' + (live ? " live" : "") +
+          '" style="grid-row:' + r.pos.r + ";grid-column:" + r.pos.c +
+          '" data-zone="' + r.id + '">' +
+          '<span class="zc-name">' + UI.esc(r.name) + "</span>" + count +
+          '<span class="zc-status' + (live ? " ok" : "") + '">' + zoneStatusText(r) + "</span></a>");
+      }
+      return '<div class="zonemap">' + cells.join("") + "</div>";
+    },
+    bind: function (root) {
+      var els = UI.$all(".zone-cell", root);
+      for (var i = 0; i < els.length; i++) (function (b) {
+        b.addEventListener("click", function () {
+          Router.navigate("zone", { id: b.getAttribute("data-zone") });
+        });
+      })(els[i]);
+    }
+  };
+
+  window.ZoneMap = ZoneMap;
+
+  /* ---- 单个方向的详情 ---- */
+  window.Pages.zone = {
+    hideTab: true,
+    title: function (p) {
+      var r = GData.regionById(p.id);
+      return r ? r.name : "成长方向";
+    },
+    render: function (p) {
+      var r = GData.regionById(p.id);
+      if (!r) return '<div class="empty">' + UI.icon("compass", 30) +
+        "<b>没有找到这个方向</b><p>它可能已经调整过了，回探索页看看别的。</p></div>";
       var h = [];
 
-      /* ---- 当前成长状态 ---- */
-      if (prof && prof.portrait) {
-        var pt = prof.portrait;
-        h.push('<section class="card">');
-        h.push('<div class="card-head"><span class="label">当前成长状态</span>' +
-          (prof.revisedAt ? '<span class="muted">最近更新 ' + UI.friendlyDate(dateStr(prof.revisedAt)) + '</span>' : "") +
-          '</div>');
-        h.push('<p class="state-text">' + UI.esc(pt.state) + '</p>');
-        h.push('<div class="focus"><div class="focus-label">值得关注的方向</div>');
-        for (var f = 0; f < pt.focus.length; f++) h.push('<p class="focus-item">· ' + UI.esc(pt.focus[f].text) + '</p>');
-        h.push('</div>');
-        h.push('<div class="focus-label">推荐练习</div>');
-        var recs = pt.recommendIds;
-        h.push('<div class="chips">');
-        for (var c = 0; c < recs.length; c++) {
-          var cc = Course.byId(recs[c]);
-          if (cc) h.push('<button class="chip" data-go-lesson="' + cc.id + '">《' + UI.esc(cc.title) + '》</button>');
-        }
-        h.push('</div>');
-        h.push('<button class="btn ghost smallmt" data-assess="1">重新自评，更新我的状态</button>');
-        h.push('</section>');
-      } else {
-        h.push('<section class="card"><p class="muted">还没有做过成长状态自评。</p>' +
-          '<button class="btn primary" data-assess="1">现在做一次自评</button></section>');
+      h.push('<section class="card">' +
+        '<div class="zone-head"><h2>' + UI.esc(r.name) + "</h2>" +
+        '<span class="tag ' + r.status + '">' + zoneStatusText(r) + "</span></div>" +
+        '<p class="sub">' + UI.esc(r.intro) + "</p></section>");
+
+      h.push('<section class="mods"><div class="label">这个方向包含</div>');
+      for (var i = 0; i < r.subTopics.length; i++) {
+        h.push('<div class="mod' + (r.status === "live" ? "" : " soon") + '"><span class="dot"></span>' +
+          UI.esc(r.subTopics[i]) +
+          (r.status === "soon" ? '<span class="soon-tag">即将开放</span>' : "") +
+          "</div>");
       }
+      h.push("</section>");
 
-      /* ---- 统计 ---- */
-      h.push('<section class="statgrid">' +
-        statCell("完成课程", st.coursesDone + " / " + st.coursesTotal) +
-        statCell("练习次数", st.practiceDone + " 种") +
-        statCell("连续成长", st.streak + " 天") +
-        statCell("本周记录", st.thisWeek + " 条") +
-        '</section>');
-
-      /* ---- 已完成课程 ---- */
-      var done = Store.doneIds();
-      h.push('<section class="card"><div class="card-head"><span class="label">已完成课程</span><span class="muted">' + done.length + ' / ' + st.coursesTotal + '</span></div>');
-      if (!done.length) {
-        h.push('<p class="muted small">还没完成课程。去首页开始第一课吧。</p>');
+      if (r.status === "live") {
+        var cs = Course.ofRegion(r.id);
+        h.push('<section class="lessons"><div class="label">本区课程</div>');
+        for (var k = 0; k < cs.length; k++) h.push(Widgets.lessonRow(cs[k]));
+        h.push("</section>");
       } else {
-        h.push('<div class="chips">');
-        for (var d = 0; d < done.length; d++) {
-          var c = Course.byId(done[d]);
-          if (c) h.push('<button class="chip ok" data-go-lesson="' + c.id + '">✓ 《' + UI.esc(c.title) + '》</button>');
-        }
-        h.push('</div>');
+        h.push('<section class="coming-card"><p>这个方向还在准备中。</p>' +
+          '<p class="muted small">不用等它。中央区那几节，现在就可以开始。</p></section>');
       }
-      h.push('</section>');
-
-      /* ---- 阶段复盘 ---- */
-      h.push(reviewBlock(done.length, st.coursesTotal));
-
-      /* ---- 成长记录时间线 ---- */
-      var j = Store.journal();
-      h.push('<section class="card"><div class="card-head"><span class="label">成长记录</span><span class="muted">共 ' + j.length + ' 条</span></div>');
-      if (!j.length) {
-        h.push('<p class="muted small">这里会按时间记录你的每一步成长。</p>');
-      } else {
-        h.push('<ul class="timeline">');
-        for (var k = j.length - 1; k >= 0; k--) {
-          var it = j[k];
-          h.push('<li><span class="tl-date">' + UI.friendlyDate(it.date) + '<em>' + UI.friendlyTime(it.ts) + '</em></span>' +
-            '<div class="tl-main"><b>' + UI.esc(it.note || journalLabel(it.type)) + '</b>' +
-            (it.meta && it.meta.courseId ?
-              '<button class="link small" data-go-lesson="' + it.meta.courseId + '">再看一遍 →</button>' : "") +
-            '</div></li>');
-        }
-        h.push('</ul>');
-      }
-      h.push('</section>');
-
-      h.push('<p class="muted small center" style="margin:14px 0 4px">数据只保存在这台设备的浏览器里。</p>');
       return h.join("");
     },
     bind: function (v) {
-      var l = UI.$all("[data-go-lesson]", v);
-      for (var i = 0; i < l.length; i++) (function (b) {
-        b.addEventListener("click", function () {
-          var id = b.getAttribute("data-go-lesson");
-          Store.markStarted(id);
-          Router.navigate("lesson", { id: id });
-        });
-      })(l[i]);
-      var a = UI.$all("[data-assess]", v);
-      for (var j = 0; j < a.length; j++) a[j].addEventListener("click", function () {
-        Router.navigate("assess", { mode: "redo" });
-      });
-      var g = UI.$all("[data-go]", v);
-      for (var m = 0; m < g.length; m++) (function (b) {
-        b.addEventListener("click", function () { Router.navigate(b.getAttribute("data-go")); });
-      })(g[m]);
+      Widgets.bindLessonRows(v);
+      Widgets.bindFav(v);
     }
   };
-
-  function dateStr(ts) { return UI.dateToStr(new Date(ts)); }
-  function statCell(k, v) {
-    return '<div class="stat"><b>' + UI.esc(v) + '</b><span>' + k + '</span></div>';
-  }
-  function reviewBlock(done, total) {
-    var h = ['<section class="card review">', '<div class="card-head"><span class="label">阶段复盘</span></div>'];
-    if (done === 0) h.push('<p>你还没有完成课程。从第一课《' + UI.esc(titleByOrder(1)) + '》开始，给自己 10 分钟就好。</p>');
-    else if (done < total) h.push('<p>你已经完成 ' + done + ' / ' + total + ' 节。你的下一节是《' + UI.esc(titleByOrder(done + 1)) + '》。记得：走完，比走快更重要。</p>');
-    else h.push('<p>第一阶段 ' + total + ' 节全部完成了。可以过几天回来复习一遍，也可以重新自评一次，看看自己有没有什么变化。</p>');
-    h.push('<div class="btnrow"><button class="btn ghost" data-assess="1">重新自评</button>');
-    if (done === 0) h.push('<button class="btn primary" data-go="home">去开始第一课</button>');
-    else h.push('<button class="btn primary" data-go="course">回到课程</button>');
-    h.push('</div></section>');
-    return h.join("");
-  }
-  function titleByOrder(o) {
-    for (var i = 0; i < COURSES.length; i++) if (COURSES[i].order === o) return COURSES[i].title;
-    return "";
-  }
 })();
 </script>
-  <script>
+<!-- 启动 -->
+<script>
 /* =========================================================================
- * 成长状态自评（整屏）：5 题 × 1–5 档 → 生成画像 → 进入首页 / 返回档案
+ * 成长空间 · 启动
+ * -------------------------------------------------------------------------
+ * 两件事，顺序不能颠倒：
+ *   1. migrate() —— 给老用户的 profile 补 answersVersion 标记（只加字段，
+ *      绝不动 answers / portrait）。必须在任何页面读 profile 之前跑。
+ *   2. Router.init() —— 生成两套导航（手机底栏 + 桌面侧栏，同一份 TABS）。
+ *
+ * 首屏落点：
+ *   - 从没被问过称呼（nicknameSetAt 不存在）→ 先问一次，可以跳过
+ *   - 其余情况 → URL 上的 #页码（认得出的话），否则首页
+ * 刻意【不】把没做过 15 题的人直接扔进答题页 ——
+ * 首页第一屏本来就是这个入口，强行进入会变成「被考试」。
  * ========================================================================= */
 (function () {
   "use strict";
-  window.Pages = window.Pages || {};
 
-  function legend() {
-    var w = ASSESS.scaleWords;
-    return '<div class="scale-legend"><span>' + w[0] + ' ' + 1 + '</span><span class="dim">1 —— 5</span><span>5 ' + w[4] + '</span></div>';
+  /* 纯静态单页，不需要 history —— hash 只决定首屏落在哪一页，
+     之后的路由仍由 Router 自己管（它不会回写 hash）。
+     有了这一步，#成长轨迹 这类链接才能被收藏、被直接打开。 */
+  function firstPage() {
+    var name = String(location.hash || "").replace(/^#\/?/, "");
+    return (name && window.Pages[name]) ? name : "home";
   }
 
-  function formHtml() {
-    var h = [];
-    h.push('<div class="assess">');
-    h.push('<div class="assess-top"><span class="brand-mini">成长空间</span><h2>成长状态自评</h2></div>');
-    h.push('<p class="page-intro">' + UI.esc(ASSESS.intro) + '</p>');
-    h.push(legend());
-    var qs = ASSESS.questions;
-    for (var i = 0; i < qs.length; i++) {
-      var q = qs[i];
-      h.push('<section class="card aq" data-q="' + q.key + '">' +
-        '<p class="aq-no">' + (i + 1) + '</p>' +
-        '<p class="aq-text">' + UI.esc(q.text) + '</p>' +
-        '<div class="scale">');
-      for (var n = 1; n <= 5; n++) {
-        h.push('<button class="sc" data-v="' + n + '"><b>' + n + '</b><span>' + UI.esc(ASSESS.scaleWord(n)) + '</span></button>');
+  /* ---- 示例模式 ---------------------------------------------------------
+     所有页面都是在 render 的时候读数据的，所以进出示例只需要
+     「换掉数据源 → 重新导航一次」，没有别的收尾工作。 */
+  function syncDemo() {
+    var on = Store.isDemo();
+    var bar = UI.$("#demoBar");
+    if (bar) bar.hidden = !on;
+    /* body 上的类会顶开固定的横幅（见 style.css 里 --demoh 那几条） */
+    document.body.classList.toggle("demo-on", on);
+  }
+
+  function enterDemo() {
+    Store.startDemo();
+    syncDemo();
+    Router.navigate("home", {});
+    UI.toast("随便点，不会留下任何记录");
+  }
+
+  function exitDemo() {
+    Store.stopDemo();
+    syncDemo();
+    /* 没设过称呼的人退回称呼页，否则首页会「你好，」后面空着一块 */
+    var p = Store.getProfile();
+    Router.navigate(p && p.nicknameSetAt !== undefined ? "home" : "nickname", {});
+  }
+
+  function boot() {
+    Store.migrate();
+    Router.init();
+
+    var exit = UI.$("#demoExit");
+    if (exit) exit.addEventListener("click", exitDemo);
+    /* 进入示例的入口有两个（称呼页 / 首页空状态），
+       都走事件委托 —— 它们是重渲染出来的，直接绑会随重渲染一起没掉 */
+    document.addEventListener("click", function (e) {
+      var t = e.target;
+      while (t && t !== document) {
+        if (t.hasAttribute && t.hasAttribute("data-demo")) {
+          e.preventDefault();
+          enterDemo();
+          return;
+        }
+        t = t.parentNode;
       }
-      h.push('</div></section>');
-    }
-    h.push('<div class="action-bar"><button class="btn primary wide" id="assessGo" disabled>完成，看看我的成长画像</button></div>');
-    h.push('</div>');
-    return h.join("");
+    });
+
+    var p = Store.getProfile();
+    if (!p || p.nicknameSetAt === undefined) Router.navigate("nickname", {});
+    else Router.navigate(firstPage(), {});
   }
 
-  function resultHtml(pt, first) {
-    var h = [];
-    h.push('<div class="assess">');
-    h.push('<div class="assess-top"><h2>我的成长画像</h2><p class="muted small">这不是标签，也不是分数，只是此刻的一个起点。</p></div>');
-    h.push('<section class="card"><div class="card-head"><span class="label">当前状态</span></div><p class="state-text">' + UI.esc(pt.state) + '</p></section>');
-    h.push('<section class="card"><div class="card-head"><span class="label">值得关注的方向</span></div>');
-    for (var f = 0; f < pt.focus.length; f++) h.push('<p class="focus-item">· ' + UI.esc(pt.focus[f].text) + '</p>');
-    h.push('</section>');
-    h.push('<section class="card"><div class="card-head"><span class="label">推荐练习</span></div>');
-    h.push('<div class="chips">');
-    for (var c = 0; c < pt.recommendIds.length; c++) {
-      var cc = Course.byId(pt.recommendIds[c]);
-      if (cc) h.push('<button class="chip ok" data-go-lesson="' + cc.id + '">《' + UI.esc(cc.title) + '》</button>');
-    }
-    h.push('</div></section>');
-    h.push('<div class="btnrow">');
-    if (first) h.push('<button class="btn primary wide" data-go="home">开始今天的成长 →</button>');
-    else h.push('<button class="btn primary wide" data-go="archive">回到我的档案</button>');
-    h.push('</div>');
-    h.push('</div>');
-    return h.join("");
-  }
-
-  Pages.assess = {
-    hideTab: true,
-    hideBar: true,
-    title: "成长状态自评",
-    render: function () { return formHtml(); },
-    bind: function (v, params) {
-      var answers = {};
-      var cells = UI.$all(".aq", v);
-      for (var i = 0; i < cells.length; i++) (function (cell) {
-        var qk = cell.getAttribute("data-q");
-        var scs = UI.$all(".sc", cell);
-        for (var j = 0; j < scs.length; j++) (function (b) {
-          b.addEventListener("click", function () {
-            var n = b.getAttribute("data-v");
-            answers[qk] = n;
-            for (var k = 0; k < scs.length; k++) scs[k].classList.toggle("on", scs[k] === b);
-            UI.toast(ASSESS.scaleWord(Number(n)));
-            if (Object.keys(answers).length === ASSESS.questions.length) UI.$("#assessGo", v).disabled = false;
-          });
-        })(scs[j]);
-      })(cells[i]);
-
-      var go = UI.$("#assessGo", v);
-      if (go) go.addEventListener("click", function () {
-        go.disabled = true;
-        var prev = Store.getProfile();
-        var first = !prev;
-        var pt = ASSESS.buildPortrait(answers);
-        var profile = {
-          done: true,
-          answers: answers,
-          portrait: pt,
-          startedAt: prev ? prev.startedAt : Date.now(),
-          revisedAt: Date.now()
-        };
-        Store.saveProfile(profile);
-        Store.addJournal("assessment", first ? "完成首次成长状态自评" : "更新成长状态自评", {});
-        UI.$("#view").innerHTML = resultHtml(pt, first);
-        bindResult();
-      });
-    }
-  };
-
-  function bindResult() {
-    var v = UI.$("#view");
-    var r = UI.$all("[data-go-lesson]", v);
-    for (var i = 0; i < r.length; i++) (function (b) {
-      b.addEventListener("click", function () {
-        var id = b.getAttribute("data-go-lesson");
-        Store.markStarted(id);
-        Router.navigate("lesson", { id: id });
-      });
-    })(r[i]);
-    var g = UI.$all("[data-go]", v);
-    for (var j = 0; j < g.length; j++) (function (b) {
-      b.addEventListener("click", function () { Router.navigate(b.getAttribute("data-go")); });
-    })(g[j]);
-    window.scrollTo(0, 0);
-  }
-})();
-</script>
-  <!-- 启动 -->
-  <script>
-/* =========================================================================
- * 成长空间 · 启动与装配
- * 首次进入（无本地画像）→ 成长评估；已有画像 → 首页。
- * ========================================================================= */
-(function () {
-  "use strict";
-
-  Router.init();
-
-  var prof = Store.getProfile();
-  if (prof && prof.done) {
-    Router.navigate("home");
-  } else {
-    Router.render("assess", {});   // 首次进入：整屏成长评估
-  }
-
-  /* 调试用：在浏览器控制台执行 devReset() 即可清空本机数据、重新走一遍 */
+  /* 清空本地数据 + 回到首屏，方便反复验收 */
   window.devReset = function () {
     Store.resetAll();
-    location.reload();
+    UI.toast("本地数据已清空");
+    Router.navigate("nickname", {});
   };
+
+  /* 控制台里手动进出示例，验收用 */
+  window.devDemo = function (on) {
+    if (on === false) exitDemo(); else enterDemo();
+    return Store.isDemo() ? "示例模式：开" : "示例模式：关";
+  };
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", boot);
+  } else {
+    boot();
+  }
 })();
 </script>
 </body>

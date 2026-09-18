@@ -205,9 +205,16 @@
     return COURSES.filter(function (c) { return c.regionId === regionId; })
       .sort(function (a, b) { return a.order - b.order; });
   }
+  /* 下一节【必须】在同一个 regionId 里找。
+     原来按全局 order 查：一旦别的门类也各自从 1 开始编号，
+     这里会返回另一门类的课，或者返回 null 让「下一节」按钮凭空消失。 */
   function nextAfter(id) {
     var c = byId(id); if (!c) return null;
-    return COURSES.filter(function (x) { return x.order === c.order + 1; })[0] || null;
+    var same = ofRegion(c.regionId), i;
+    for (i = 0; i < same.length; i++) {
+      if (same[i].id === c.id) return same[i + 1] || null;
+    }
+    return null;
   }
 
   window.COURSES = COURSES;

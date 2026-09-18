@@ -59,9 +59,42 @@
     toastTimer = setTimeout(function () { t.classList.remove("show"); }, 1800);
   }
 
+  /* 课程序号：两位补零的唯一入口。
+     以前散在 course.js 的 ('0' + order) 与 route.js 的 (order < 10 ? "0" : "")，
+     课程超过 9 节后会渲染成 "010"，收拢到这里统一处理。 */
+  function courseNo(n) {
+    n = Number(n) || 0;
+    return (n < 10 ? "0" : "") + n;
+  }
+
+  var WEEK = ["周日", "周一", "周二", "周三", "周四", "周五", "周六"];
+  function weekday(dateStr) {
+    var d = dateStr ? new Date(dateStr + "T00:00:00") : new Date();
+    return WEEK[d.getDay()];
+  }
+
+  /* 2026.09.17 —— 参考图里日期都用点分隔 */
+  function dotDate(dateStr) {
+    var p = String(dateStr || today()).split("-");
+    if (p.length < 3) return dateStr || "";
+    return p[0] + "." + p[1] + "." + p[2];
+  }
+
+  /* 图标：转发给 ICONS，ICONS 未加载时安全降级为空串 */
+  function icon(name, size) {
+    return (window.ICONS && window.ICONS.icon) ? window.ICONS.icon(name, size) : "";
+  }
+
+  /* 转义后保留换行（用户写的多行文本、记录正文用） */
+  function textLines(s) {
+    return esc(s).replace(/\n/g, "<br>");
+  }
+
   window.UI = {
     $: $, $all: $all, el: el, esc: esc,
     today: today, pad: pad, dateToStr: dateToStr, dayBefore: dayBefore,
-    friendlyDate: friendlyDate, friendlyTime: friendlyTime, toast: toast
+    friendlyDate: friendlyDate, friendlyTime: friendlyTime, toast: toast,
+    courseNo: courseNo, weekday: weekday, dotDate: dotDate,
+    icon: icon, textLines: textLines
   };
 })();
